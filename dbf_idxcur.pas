@@ -143,7 +143,7 @@ begin
     end;
     Result := etInteger;
   end else begin
-    StrPLCopy(ABuffer, Key, TIndexFile(PagedFile).KeyLen);
+    StrPLCopy(PChar(ABuffer), Key, TIndexFile(PagedFile).KeyLen);
     // we have null-terminated string, pad with spaces if string too short
     currLen := StrLen(ABuffer);
     FillChar(ABuffer[currLen], TIndexFile(PagedFile).KeyLen-currLen, ' ');

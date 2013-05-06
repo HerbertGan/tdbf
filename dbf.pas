@@ -1001,17 +1001,17 @@ begin
     TempFieldDef := FDbfFile.FieldDefs.Items[I];
     // handle duplicate field names
     N := 1;
-    BaseName := TempFieldDef.FieldName;
-    while FieldDefs.IndexOf(TempFieldDef.FieldName)>=0 do
+    BaseName := string(TempFieldDef.FieldName);
+    while FieldDefs.IndexOf(string(TempFieldDef.FieldName))>=0 do
     begin
       Inc(N);
-      TempFieldDef.FieldName:=BaseName+IntToStr(N);
+      TempFieldDef.FieldName := AnsiString(BaseName + IntToStr(N));
     end;
     // add field
     if TempFieldDef.FieldType in [ftString, ftBCD, ftBytes] then
-      FieldDefs.Add(TempFieldDef.FieldName, TempFieldDef.FieldType, TempFieldDef.Size, false)
+      FieldDefs.Add(string(TempFieldDef.FieldName), TempFieldDef.FieldType, TempFieldDef.Size, false)
     else
-      FieldDefs.Add(TempFieldDef.FieldName, TempFieldDef.FieldType, 0, false);
+      FieldDefs.Add(string(TempFieldDef.FieldName), TempFieldDef.FieldType, 0, false);
 
     if TempFieldDef.FieldType = ftFloat then
       FieldDefs[I].Precision := TempFieldDef.Precision;
@@ -1276,7 +1276,7 @@ end;
 function TDbf.GetLanguageStr: String;
 begin
   if FDbfFile <> nil then
-    Result := FDbfFile.LanguageStr;
+    Result := string(FDbfFile.LanguageStr);
 end;
 
 function TDbf.LockTable(const Wait: Boolean): Boolean;
@@ -1437,7 +1437,7 @@ begin
         begin
           with ADbfFieldDefs.AddFieldDef do
           begin
-            FieldName := FieldDefs.Items[I].Name;
+            FieldName := AnsiString(FieldDefs.Items[I].Name);
             FieldType := FieldDefs.Items[I].DataType;
             if FieldDefs.Items[I].Size > 0 then
             begin
@@ -1568,9 +1568,9 @@ begin
       with lFieldDefs.AddFieldDef do
       begin
         if Length(lSrcField.Name) > 0 then
-          FieldName := lSrcField.Name
+          FieldName := AnsiString(lSrcField.Name)
         else
-          FieldName := lSrcField.FieldName;
+          FieldName := AnsiString(lSrcField.FieldName);
         FieldType := lSrcField.DataType;
         Required := lSrcField.Required;
         if (1 <= lSrcField.FieldNo) 
@@ -2178,7 +2178,8 @@ begin
   if FReadOnly or (csDesigning in ComponentState) then
     Result := false
   else
-    Result := FTranslationMode > tmNoneAvailable;
+    //Result := FTranslationMode > tmNoneAvailable;
+     Result := True;
 end;
 
 {$ifdef SUPPORT_DEFCHANGED}

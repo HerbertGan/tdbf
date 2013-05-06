@@ -788,7 +788,11 @@ begin
 {$IFDEF ENG_NUMBERS}
           // we'll have to convert FDecimalSeparator into DecimalSeparator
           // otherwise the OS will not understand what we mean
+          {$IFDEF DELPHI_XE3}
+          W[DecSep] := FormatSettings.DecimalSeparator;
+          {$ELSE}
           W[DecSep] := DecimalSeparator;
+          {$ENDIF}
 {$ENDIF}
           TempWord := TFloatConstant.Create(W, W)
         end else begin

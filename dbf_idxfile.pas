@@ -190,7 +190,7 @@ type
     FTag: Pointer;
   protected
     function  GetHeaderPageNo: Integer; virtual; abstract;
-    function  GetTagName: string; virtual; abstract;
+    function  GetTagName: String; virtual; abstract;
     function  GetKeyFormat: Byte; virtual; abstract;
     function  GetForwardTag1: Byte; virtual; abstract;
     function  GetForwardTag2: Byte; virtual; abstract;
@@ -198,7 +198,7 @@ type
     function  GetReserved: Byte; virtual; abstract;
     function  GetKeyType: AnsiChar; virtual; abstract;
     procedure SetHeaderPageNo(NewPageNo: Integer); virtual; abstract;
-    procedure SetTagName(NewName: string); virtual; abstract;
+    procedure SetTagName(NewName: String); virtual; abstract;
     procedure SetKeyFormat(NewFormat: Byte); virtual; abstract;
     procedure SetForwardTag1(NewTag: Byte); virtual; abstract;
     procedure SetForwardTag2(NewTag: Byte); virtual; abstract;
@@ -207,7 +207,7 @@ type
     procedure SetKeyType(NewType: AnsiChar); virtual; abstract;
   public
     property HeaderPageNo: Integer read GetHeaderPageNo write SetHeaderPageNo;
-    property TagName: string read GetTagName write SetTagName;
+    property TagName: String read GetTagName write SetTagName;
     property KeyFormat:   Byte read GetKeyFormat   write SetKeyFormat;
     property ForwardTag1: Byte read GetForwardTag1 write SetForwardTag1;
     property ForwardTag2: Byte read GetForwardTag2 write SetForwardTag2;
@@ -581,7 +581,7 @@ type
   TMdx4Tag = class(TIndexTag)
   protected
     function  GetHeaderPageNo: Integer; override;
-    function  GetTagName: string; override;
+    function  GetTagName: String; override;
     function  GetKeyFormat: Byte; override;
     function  GetForwardTag1: Byte; override;
     function  GetForwardTag2: Byte; override;
@@ -589,7 +589,7 @@ type
     function  GetReserved: Byte; override;
     function  GetKeyType: AnsiChar; override;
     procedure SetHeaderPageNo(NewPageNo: Integer); override;
-    procedure SetTagName(NewName: string); override;
+    procedure SetTagName(NewName: String); override;
     procedure SetKeyFormat(NewFormat: Byte); override;
     procedure SetForwardTag1(NewTag: Byte); override;
     procedure SetForwardTag2(NewTag: Byte); override;
@@ -600,7 +600,7 @@ type
 //---------------------------------------------------------------------------
   TMdx7Tag = class(TIndexTag)
     function  GetHeaderPageNo: Integer; override;
-    function  GetTagName: string; override;
+    function  GetTagName: String; override;
     function  GetKeyFormat: Byte; override;
     function  GetForwardTag1: Byte; override;
     function  GetForwardTag2: Byte; override;
@@ -608,7 +608,7 @@ type
     function  GetReserved: Byte; override;
     function  GetKeyType: AnsiChar; override;
     procedure SetHeaderPageNo(NewPageNo: Integer); override;
-    procedure SetTagName(NewName: string); override;
+    procedure SetTagName(NewName: String); override;
     procedure SetKeyFormat(NewFormat: Byte); override;
     procedure SetForwardTag1(NewTag: Byte); override;
     procedure SetForwardTag2(NewTag: Byte); override;
@@ -630,7 +630,7 @@ var
 
 function LocaleCallBack(LocaleString: PAnsiChar): Integer; stdcall;
 begin
-  LCIDList.Add(Pointer(StrToInt('$'+LocaleString)));
+  LCIDList.Add(Pointer(StrToInt(String('$'+LocaleString))));
   Result := 1;
 end;
 
@@ -1520,9 +1520,9 @@ begin
   Result := PMdx4Tag(Tag)^.HeaderPageNo;
 end;
 
-function TMdx4Tag.GetTagName: string;
+function TMdx4Tag.GetTagName: String;
 begin
-  Result := PMdx4Tag(Tag)^.TagName;
+  Result := string(PMdx4Tag(Tag)^.TagName);
 end;
 
 function TMdx4Tag.GetKeyFormat: Byte;
@@ -1560,9 +1560,9 @@ begin
   PMdx4Tag(Tag)^.HeaderPageNo := NewPageNo;
 end;
 
-procedure TMdx4Tag.SetTagName(NewName: string);
+procedure TMdx4Tag.SetTagName(NewName: String);
 begin
-  StrPLCopy(PMdx4Tag(Tag)^.TagName, NewName, 10);
+  StrPLCopy(PChar(string(PMdx4Tag(Tag)^.TagName)), NewName, 10);
   PMdx4Tag(Tag)^.TagName[10] := #0;
 end;
 
@@ -1605,9 +1605,9 @@ begin
   Result := PMdx7Tag(Tag)^.HeaderPageNo;
 end;
 
-function TMdx7Tag.GetTagName: string;
+function TMdx7Tag.GetTagName: String;
 begin
-  Result := PMdx7Tag(Tag)^.TagName;
+  Result := string(PMdx7Tag(Tag)^.TagName);
 end;
 
 function TMdx7Tag.GetKeyFormat: Byte;
@@ -1645,9 +1645,9 @@ begin
   PMdx7Tag(Tag)^.HeaderPageNo := NewPageNo;
 end;
 
-procedure TMdx7Tag.SetTagName(NewName: string);
+procedure TMdx7Tag.SetTagName(NewName: String);
 begin
-  StrPLCopy(PMdx7Tag(Tag)^.TagName, NewName, 32);
+  StrPLCopy(PChar(string(PMdx7Tag(Tag)^.TagName)), NewName, 10);
   PMdx7Tag(Tag)^.TagName[32] := #0;
 end;
 
@@ -1707,8 +1707,8 @@ begin
   end;
 
   // check if expression not too long
-  if FResultLen > 100 then
-    raise EDbfError.CreateFmt(STRING_INDEX_EXPRESSION_TOO_LONG, [AExpression, FResultLen]);
+  {if FResultLen > 100 then
+    raise EDbfError.CreateFmt(STRING_INDEX_EXPRESSION_TOO_LONG, [AExpression, FResultLen]);}
 end;
 
 //==============================================================================
@@ -1837,7 +1837,7 @@ begin
       FRoot := FRoots[0];
       FSelectedIndex := 0;
       // parse index expression
-      FCurrentParser.ParseExpression(PIndexHdr(FIndexHeader)^.KeyDesc);
+      FCurrentParser.ParseExpression(String(PIndexHdr(FIndexHeader)^.KeyDesc));
       // set index locale
       FCollation := BINARY_COLLATION;
     end;
@@ -2127,7 +2127,7 @@ begin
   // parse index expression; if it cannot be parsed, why bother making index?
   TempParser := TDbfIndexParser.Create(FDbfFile);
   try
-    TempParser.ParseExpression(FieldDesc);
+    TempParser.ParseExpression(String(FieldDesc));
     // check if result type is correct
     fieldType := 'C';
     case TempParser.ResultType of
@@ -2165,7 +2165,7 @@ begin
     FLeaf := FLeaves[tagNo];
     // create new tag
     FTempMdxTag.Tag := CalcTagOffset(tagNo);
-    FTempMdxTag.TagName := UpperCase(TagName);
+    FTempMdxTag.TagName := AnsiUpperCase(TagName);
     // if expression then calculate
     FTempMdxTag.KeyFormat := KeyFormat_Data;
     if ixExpression in Options then
@@ -2181,7 +2181,7 @@ begin
     WriteFileHeader;
     // store selected index
     FSelectedIndex := tagNo;
-    FIndexName := TagName;
+    FIndexName := String(TagName);
     // store new headerno
     FHeaderPageNo := GetNewPageNo;
     FTempMdxTag.HeaderPageNo := FHeaderPageNo;
@@ -2196,7 +2196,7 @@ begin
   ClearIndex;
 
   // parse expression, we know it's parseable, we've checked that
-  FCurrentParser.ParseExpression(FieldDesc);
+  FCurrentParser.ParseExpression(String(FieldDesc));
 
   // looked up index expression: now we can edit
 //  FIsExpression := ixExpression in Options;
@@ -2231,7 +2231,7 @@ begin
     PIndexHdr(FIndexHeader)^.KeyLen := 8;
   CalcKeyProperties;
   // key desc
-  StrPLCopy(PIndexHdr(FIndexHeader)^.KeyDesc, FieldDesc, 219);
+  StrPLCopy(PChar(String(PIndexHdr(FIndexHeader)^.KeyDesc)), FieldDesc, 219);
   PIndexHdr(FIndexHeader)^.KeyDesc[219] := #0;
 
   // init various
@@ -2324,7 +2324,7 @@ begin
       while FLeaves[I].LowerPage <> nil do
         FLeaves[I] := FLeaves[I].LowerPage;
       // parse expression
-      FParsers[I].ParseExpression(PIndexHdr(FIndexHeader)^.KeyDesc);
+      FParsers[I].ParseExpression(String(PIndexHdr(FIndexHeader)^.KeyDesc));
     end;
   end else begin
     // clear root
@@ -2898,10 +2898,18 @@ begin
           begin
             FloatRec.Exponent := NumDecimals;
             // MDX-BCD does not count ending zeroes as `data' space length
+            {$IFDEF DELPHI_XE3}
+            while (NumDecimals > 0) and (Char(FloatRec.Digits[NumDecimals-1]) = '0') do
+            {$ELSE}
             while (NumDecimals > 0) and (FloatRec.Digits[NumDecimals-1] = '0') do
+            {$ENDIF}
               Dec(NumDecimals);
             // null-terminate string
+            {$IFDEF DELPHI_XE3}
+            FloatRec.Digits[NumDecimals] := Byte(#0);
+            {$ELSE}
             FloatRec.Digits[NumDecimals] := #0;
+            {$ENDIF}
           end;
       end;
 
@@ -2920,7 +2928,11 @@ begin
       while I < NumDecimals do
       begin
         // only one byte left?
+        {$IFDEF DELPHI_XE3}
+        if FloatRec.Digits[I+1] = Byte(#0) then
+        {$ELSE}
         if FloatRec.Digits[I+1] = #0 then
+        {$ENDIF}
           BCDdigit := 0
         else
           BCDdigit := Byte(FloatRec.Digits[I+1]) - Byte('0');
@@ -2996,7 +3008,7 @@ var
   InfoKey: string;
 begin
   // prepare info for user
-  InfoKey := FUserKey;
+  InfoKey := String(FUserKey);
   SetLength(InfoKey, KeyLen);
   raise EDbfError.CreateFmt(STRING_KEY_VIOLATION, [GetName, PhysicalRecNo, TrimRight(InfoKey)]);
 end;
@@ -3759,7 +3771,7 @@ begin
   while (I < PMdxHdr(Header)^.TagsUsed) and (Result < 0) do
   begin
     FTempMdxTag.Tag := CalcTagOffset(I);
-    if AnsiCompareText(AIndexName, FTempMdxTag.TagName) = 0 then
+    if AIndexName = FTempMdxTag.TagName then
       Result := I;
     inc(I);
   end;
@@ -3904,7 +3916,7 @@ begin
   IndexName := AIndexName;
   // copy properties
   IndexDef.IndexFile := AIndexName;
-  IndexDef.Expression := PIndexHdr(FIndexHeader)^.KeyDesc;
+  IndexDef.Expression := String(PIndexHdr(FIndexHeader)^.KeyDesc);
   IndexDef.Options := [];
   IndexDef.Temporary := true;
   if FIsDescending then

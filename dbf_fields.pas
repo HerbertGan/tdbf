@@ -92,9 +92,9 @@ type
     constructor Create(Owner: TPersistent);
 
 {$ifdef SUPPORT_DEFAULT_PARAMS}
-    procedure Add(const Name: string; DataType: TFieldType; Size: Integer = 0; Required: Boolean = False);
+    procedure Add(const Name: AnsiString; DataType: TFieldType; Size: Integer = 0; Required: Boolean = False);
 {$else}
-    procedure Add(const Name: string; DataType: TFieldType; Size: Integer; Required: Boolean);
+    procedure Add(const Name: AnsiString; DataType: TFieldType; Size: Integer; Required: Boolean);
 {$endif}
     function AddFieldDef: TDbfFieldDef;
 
@@ -169,7 +169,7 @@ begin
   Result := FOwner;
 end;
 
-procedure TDbfFieldDefs.Add(const Name: string; DataType: TFieldType; Size: Integer; Required: Boolean);
+procedure TDbfFieldDefs.Add(const Name: AnsiString; DataType: TFieldType; Size: Integer; Required: Boolean);
 var
   FieldDef: TDbfFieldDef;
 begin
@@ -244,7 +244,7 @@ end;
 procedure TDbfFieldDef.AssignDb(DbSource: TFieldDef);
 begin
   // copy from Db.TFieldDef
-  FFieldName := DbSource.Name;
+  FFieldName := AnsiString(DbSource.Name);
   FFieldType := DbSource.DataType;
   FSize := DbSource.Size;
   FPrecision := DbSource.Precision;
@@ -286,7 +286,7 @@ begin
     DbDest.DataType := FFieldType;
     DbDest.Required := FRequired;
     DbDest.Size := FSize;
-    DbDest.Name := FFieldName;
+    DbDest.Name := string(FFieldName);
 {$endif}
   end else
 {$endif}
@@ -551,7 +551,7 @@ end;
 
 function TDbfFieldDef.GetDisplayName: string; {override;}
 begin
-  Result := FieldName;
+  Result := string(FieldName);
 end;
 
 function TDbfFieldDef.IsBlob: Boolean; {override;}

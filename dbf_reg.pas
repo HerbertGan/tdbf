@@ -41,9 +41,15 @@ uses
   QForms,
   QDialogs,
 {$else}
+{$ifdef DELPHI_XE2}
+  vcl.controls,
+  vcl.forms,
+  vcl.dialogs,
+{$else}
   Controls,
   Forms,
   Dialogs,
+{$endif}
 {$endif}
   dbf,
   dbf_dbffile,

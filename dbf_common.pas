@@ -95,10 +95,10 @@ function IsFullFilePath(const Path: string): Boolean; // full means not relative
 function DateTimeToBDETimeStamp(aDT: TDateTime): double;
 function BDETimeStampToDateTime(aBT: double): TDateTime;
 function  GetStrFromInt(Val: Integer; const Dst: PChar): Integer;
-procedure GetStrFromInt_Width(Val: Integer; const Width: Integer; const Dst: PChar; const PadChar: Char);
+procedure GetStrFromInt_Width(Val: Integer; const Width: Integer; const Dst: PAnsiChar; const PadChar: Char);
 {$ifdef SUPPORT_INT64}
 function  GetStrFromInt64(Val: Int64; const Dst: PChar): Integer;
-procedure GetStrFromInt64_Width(Val: Int64; const Width: Integer; const Dst: PChar; const PadChar: Char);
+procedure GetStrFromInt64_Width(Val: Int64; const Width: Integer; const Dst: PAnsiChar; const PadChar: Char);
 {$endif}
 procedure FindNextName(BaseName: string; var OutName: string; var Modifier: Integer);
 {$ifdef USE_CACHE}
@@ -181,9 +181,9 @@ end;
 
 // it seems there is no pascal function to convert an integer into a PAnsiChar???
 
-procedure GetStrFromInt_Width(Val: Integer; const Width: Integer; const Dst: PChar; const PadChar: Char);
+procedure GetStrFromInt_Width(Val: Integer; const Width: Integer; const Dst: PAnsiChar; const PadChar: Char);
 var
-  Temp: array[0..10] of Char;
+  Temp: array[0..10] of AnsiChar;
   I, J: Integer;
   NegSign: boolean;
 begin
@@ -192,9 +192,9 @@ end;
 
 {$ifdef SUPPORT_INT64}
 
-procedure GetStrFromInt64_Width(Val: Int64; const Width: Integer; const Dst: PChar; const PadChar: Char);
+procedure GetStrFromInt64_Width(Val: Int64; const Width: Integer; const Dst: PAnsiChar; const PadChar: Char);
 var
-  Temp: array[0..19] of Char;
+  Temp: array[0..19] of AnsiChar;
   I, J: Integer;
   NegSign: boolean;
 begin
@@ -412,10 +412,10 @@ begin
   Result := Length;
   if (FromCP = GetOEMCP) and (ToCP = GetACP) then
   begin
-    {$IFDEF DELPHI_2010}
+    {$IFDEF DELPHI_2009}   // Rafal Chlopek (14-03-2010):  I've commented DELPHI_2010
     OemToCharBuff(Src, PChar(Dest), Length)
     {$ELSE}
-    OemToCharBuff(Src, Dest, Length)
+    OemToCharBuff(Src, PChar(Dest), Length)
     {$ENDIF}
   end
   else
@@ -424,7 +424,7 @@ begin
     {$IFDEF DELPHI_2009}
     CharToOemBuff(PChar(Src), Dest, Length)
     {$ELSE}
-    CharToOemBuff(Src, Dest, Length)
+    CharToOemBuff(PChar(Src), Dest, Length)
     {$ENDIF}
   end
   else

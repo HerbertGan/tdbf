@@ -491,11 +491,11 @@ begin
     // foxpro or dbase?
     if IsFoxPro then
     begin
-      Result := 'FOX' + PAnsiChar(@SubType);
+      Result := AnsiString('FOX') + PAnsiChar(@SubType);
       if CodePage = 1252 then
-        Result := Result + 'WIN'
+        Result := Result + AnsiString('WIN')
       else
-        Result := Result + IntToStr(CodePage);
+        Result := Result + AnsiString(IntToStr(CodePage));
     end else begin
       if SubType = DbfLocale_Bul868 then
       begin
@@ -508,7 +508,7 @@ begin
         if CodePage = 1252 then
           Result := Result + 'WIN'
         else
-          Result := Result + IntToStr(CodePage);
+          Result := Result + AnsiString(IntToStr(CodePage));
         // add subtype
         Result := Result + PAnsiChar(@SubType);
       end;
@@ -630,7 +630,7 @@ begin
   else if CodePageStr = 'REW' then    // hebrew
     CodePage := 1255
   else
-    CodePage := StrToInt(CodePageStr);
+    CodePage := StrToInt(String(CodePageStr));
   // find lang id
   Result := FindLangId(CodePage, SubType, @LangId_To_LocaleStr[0], IsFoxPro);
 end;

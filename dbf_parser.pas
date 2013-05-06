@@ -37,7 +37,7 @@ type
 
     procedure FillExpressList; override;
     procedure HandleUnknownVariable(VarName: string); override;
-    function  GetVariableInfo(VarName: string): TDbfFieldDef;
+    function  GetVariableInfo(VarName: AnsiString): TDbfFieldDef;
     function  CurrentExpression: string; override;
     procedure ValidateExpression(AExpression: string); virtual;
     function  GetResultType: TExpressionType; override;
@@ -207,7 +207,7 @@ type
   private
     FFieldDef: TDbfFieldDef;
     FDbfFile: TDbfFile;
-    FFieldName: string;
+    FFieldName: AnsiString;
     FExprWord: TExprWord;
   protected
     function GetFieldVal: Pointer; virtual; abstract;
@@ -221,7 +221,7 @@ type
     property FieldDef: TDbfFieldDef read FFieldDef;
     property FieldType: TExpressionType read GetFieldType;
     property DbfFile: TDbfFile read FDbfFile;
-    property FieldName: string read FFieldName;
+    property FieldName: AnsiString read FFieldName;
   end;
 
   TStringFieldVar = class(TFieldVar)
@@ -515,7 +515,7 @@ begin
 {$else}
       GetStrFromInt_Width
 {$endif}
-        (Val, width, Res.MemoryPos^, #32);
+        (Val, width, PAnsiChar(Res.MemoryPos^), #32);
       // advance pointer
       Inc(Res.MemoryPos^, width);
       // need to add decimal?
@@ -1443,7 +1443,7 @@ begin
     ParseExpression(lExpression);
 end;
 
-function TDbfParser.GetVariableInfo(VarName: string): TDbfFieldDef;
+function TDbfParser.GetVariableInfo(VarName: AnsiString): TDbfFieldDef;
 begin
   Result := TDbfFile(FDbfFile).GetFieldInfo(VarName);
 end;
@@ -1454,7 +1454,7 @@ var
   TempFieldVar: TFieldVar;
 begin
   // is this variable a fieldname?
-  FieldInfo := GetVariableInfo(VarName);
+  FieldInfo := GetVariableInfo(AnsiString(VarName));
   if FieldInfo = nil then
     raise EDbfError.CreateFmt(STRING_INDEX_BASED_ON_UNKNOWN_FIELD, [VarName]);
 
@@ -1539,7 +1539,7 @@ begin
   ClearExpressions;
 
   // is this a simple field or complex expression?
-  FIsExpression := GetVariableInfo(AExpression) = nil;
+  FIsExpression := GetVariableInfo(AnsiString(AExpression)) = nil;
   if FIsExpression then
   begin
     // parse requested
