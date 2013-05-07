@@ -5,6 +5,7 @@ interface
 {$I dbf_common.inc}
 
 uses
+  {$IFDEF UNICODE}AnsiStrings,{$ENDIF}
   SysUtils,
   Classes,
   dbf_cursor,
@@ -145,7 +146,7 @@ begin
   end else begin
     StrPLCopy(PChar(ABuffer), Key, TIndexFile(PagedFile).KeyLen);
     // we have null-terminated string, pad with spaces if string too short
-    currLen := StrLen(ABuffer);
+    currLen := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(ABuffer){$ELSE}StrLen(ABuffer){$ENDIF};
     FillChar(ABuffer[currLen], TIndexFile(PagedFile).KeyLen-currLen, ' ');
     Result := etString;
   end;
@@ -165,7 +166,7 @@ begin
     // nothing needs to be done
   end else begin
     // check if string long enough then no copying needed
-    userLen := StrLen(Key);
+    userLen := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(Key){$ELSE}StrLen(Key){$ENDIF};
     keyLen := TIndexFile(PagedFile).KeyLen;
     if userLen < keyLen then
     begin

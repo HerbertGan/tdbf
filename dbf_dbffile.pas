@@ -5,6 +5,7 @@ interface
 {$I dbf_common.inc}
 
 uses
+  {$IFDEF UNICODE}AnsiStrings,{$ENDIF}
   Classes, SysUtils,
 {$ifdef WINDOWS}
   Windows,
@@ -228,7 +229,7 @@ begin
   {$ENDIF}
   begin
     // search dec sep
-    iPos := StrScan(PAnsiChar(Src), AnsiChar(sDBF_DEC_SEP));
+    iPos := {$IFDEF DELPHI_XE4}AnsiStrings.StrScan(PAnsiChar(Src), AnsiChar(sDBF_DEC_SEP)){$ELSE}StrScan(PAnsiChar(Src), AnsiChar(sDBF_DEC_SEP)){$ENDIF};
     // replace
     if iPos <> nil then
       {$IFDEF DELPHI_XE3}
@@ -240,7 +241,8 @@ begin
   end else
     iPos := nil;
   // convert to double
-  if TextToFloat(PAnsiChar(Src), eValue {$ifndef VER1_0}, fvExtended{$endif}) then
+
+  if {$IFDEF DELPHI_XE4}AnsiStrings.TextToFloat(PAnsiChar(Src), eValue {$ifndef VER1_0}, fvExtended{$endif}){$ELSE}TextToFloat(PAnsiChar(Src), eValue {$ifndef VER1_0}, fvExtended{$endif}){$ENDIF} then
     Result := eValue
   else
     Result := 0;
@@ -438,10 +440,10 @@ begin
         //  'FOX..WIN' -> Charset 1252 (ansi)
         if (LangStr[0] = 'D') and (LangStr[1] = 'B') then
         begin
-          if StrLComp(LangStr+2, 'WIN', 3) = 0 then
+          if {$IFDEF DELPHI_XE4}AnsiStrings.StrLComp(LangStr+2, 'WIN', 3){$ELSE}StrLComp(LangStr+2, 'WIN', 3){$ENDIF} = 0 then
             FFileCodePage := 1252
           else
-          if StrLComp(LangStr+2, 'HEBREW', 6) = 0 then
+          if {$IFDEF DELPHI_XE4}AnsiStrings.StrLComp(LangStr+2, 'HEBREW', 6){$ELSE}StrLComp(LangStr+2, 'HEBREW', 6){$ENDIF} = 0 then
           begin
             FFileCodePage := 1255;
           end else begin
@@ -450,9 +452,9 @@ begin
               FFileCodePage := FFileCodePage * 10 + Ord(LangStr[5]) - Ord('0');
           end;
         end else
-        if StrLComp(LangStr, 'FOX', 3) = 0 then
+        if {$IFDEF DELPHI_XE4}AnsiStrings.StrLComp(LangStr, 'FOX', 3){$ELSE}StrLComp(LangStr, 'FOX', 3){$ENDIF} = 0 then
         begin
-          if StrLComp(LangStr+5, 'WIN', 3) = 0 then
+          if {$IFDEF DELPHI_XE4}AnsiStrings.StrLComp(LangStr+5, 'WIN', 3){$ELSE}StrLComp(LangStr+5, 'WIN', 3){$ENDIF} = 0 then
             FFileCodePage := 1252
           else
             FFileCodePage := GetIntFromStrLength(LangStr+5, 3, 0)
@@ -625,10 +627,19 @@ begin
       FillChar(Header^, HeaderSize, #0);
       PDbfHdr(Header)^.VerDBF := $04;
       // write language string
+      {$IFDEF DELPHI_XE4}
+      AnsiStrings.StrPLCopy(
+        @PAfterHdrVII(PChar(Header)+SizeOf(rDbfHdr))^.LanguageDriverName[32],
+        ConstructLangName(FFileCodePage, lLocaleID, false),
+        63-32);
+      {$ELSE}
       StrPLCopy(
         @PAfterHdrVII(PChar(Header)+SizeOf(rDbfHdr))^.LanguageDriverName[32],
-        ConstructLangName(FFileCodePage, lLocaleID, false), 
+        ConstructLangName(FFileCodePage, lLocaleID, false),
         63-32);
+      {$ENDIF}
+
+
       lFieldDescPtr := @lFieldDescVII;
     end else begin
       // version xBaseIII/IV/V without memo
@@ -687,7 +698,11 @@ begin
       if FDbfVersion = xBaseVII then
       begin
         FillChar(lFieldDescVII, SizeOf(lFieldDescVII), #0);
-        StrPLCopy(lFieldDescVII.FieldName, lFieldDef.FieldName, SizeOf(lFieldDescVII.FieldName)-1);
+        {$IFDEF DELPHI_XE4}
+          AnsiStrings.StrPLCopy(lFieldDescVII.FieldName, lFieldDef.FieldName, SizeOf(lFieldDescVII.FieldName)-1);
+        {$ELSE}
+          StrPLCopy(lFieldDescVII.FieldName, lFieldDef.FieldName, SizeOf(lFieldDescVII.FieldName)-1);
+        {$ENDIF}
         lFieldDescVII.FieldType := lFieldDef.NativeFieldType;
         lFieldDescVII.FieldSize := lSize;
         lFieldDescVII.FieldPrecision := lPrec;
@@ -696,7 +711,11 @@ begin
         //lFieldDescVII.MDXFlag := ???
       end else begin
         FillChar(lFieldDescIII, SizeOf(lFieldDescIII), #0);
-        StrPLCopy(lFieldDescIII.FieldName, lFieldDef.FieldName, SizeOf(lFieldDescIII.FieldName)-1);
+        {$IFDEF DELPHI_XE4}
+          AnsiStrings.StrPLCopy(lFieldDescIII.FieldName, lFieldDef.FieldName, SizeOf(lFieldDescIII.FieldName)-1);
+        {$ELSE}
+          StrPLCopy(lFieldDescIII.FieldName, lFieldDef.FieldName, SizeOf(lFieldDescIII.FieldName)-1);
+        {$ENDIF}
         lFieldDescIII.FieldType := lFieldDef.NativeFieldType;
         lFieldDescIII.FieldSize := lSize;
         lFieldDescIII.FieldPrecision := lPrec;
@@ -1708,7 +1727,7 @@ begin
           SaveDateToDst;
         end;
       ftString:
-        StrLCopy(PAnsiChar(Dst), PAnsiChar(Src), FieldSize);
+        {$IFDEF DELPHI_XE4}AnsiStrings.StrLCopy(PAnsiChar(Dst), PAnsiChar(Src), FieldSize){$ELSE}StrLCopy(PAnsiChar(Dst), PAnsiChar(Src), FieldSize){$ENDIF};
     end else begin
       case DataType of
       ftString:
@@ -1938,7 +1957,7 @@ begin
         ftString:
           begin
             // copy data
-            Len := StrLen(PAnsiChar(Src));
+            Len := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(PAnsiChar(Src)){$ELSE}StrLen(PAnsiChar(Src)){$ENDIF};
             if Len > FieldSize then
               Len := FieldSize;
             Move(Src^, Dst^, Len);

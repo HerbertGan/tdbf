@@ -7,7 +7,6 @@ interface
 uses
   Classes,
   SysUtils,
-  Windows,
   dbf_common;
 
 //const

@@ -5,6 +5,7 @@ interface
 {$I dbf_common.inc}
 
 uses
+ {$IFDEF UNICODE}AnsiStrings,{$ENDIF}
 {$ifdef WINDOWS}
   Windows,
 {$else}
@@ -1699,7 +1700,7 @@ begin
       GetMem(TempBuffer, TDbfFile(DbfFile).RecordSize);
       try
         TDbfFile(DbfFile).InitRecord(TempBuffer);
-        FResultLen := StrLen(ExtractFromBuffer(TempBuffer));
+        FResultLen := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(ExtractFromBuffer(TempBuffer)){$ELSE}StrLen(ExtractFromBuffer(TempBuffer)){$ENDIF};
       finally
         FreeMem(TempBuffer);
       end;
@@ -2884,7 +2885,7 @@ begin
             ExtValue := PDouble(Result)^;
             FloatToDecimal(FloatRec, ExtValue, {$ifndef FPC_VERSION}fvExtended,{$endif} 9999, 15);
             if ExtValue <> 0.0 then
-              NumDecimals := StrLen(PAnsiChar(@FloatRec.Digits[0]))
+              NumDecimals := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(PAnsiChar(@FloatRec.Digits[0])){$ELSE}StrLen(PAnsiChar(@FloatRec.Digits[0])){$ENDIF}
             else
               NumDecimals := 0;
             // maximum number of decimals possible to encode in BCD is 16

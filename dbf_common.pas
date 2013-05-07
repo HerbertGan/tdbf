@@ -5,6 +5,7 @@ interface
 {$I dbf_common.inc}
 
 uses
+  {$IFDEF UNICODE}AnsiStrings,{$ENDIF}
   SysUtils, Classes, DB
 {$ifndef MSWINDOWS}
   , Types, dbf_wtil
@@ -408,7 +409,7 @@ var
   wideBytes: Cardinal;
 begin
   if Length = -1 then
-    Length := StrLen(Src);
+    Length := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(Src){$ELSE}StrLen(Src){$ENDIF};
   Result := Length;
   if (FromCP = GetOEMCP) and (ToCP = GetACP) then
   begin

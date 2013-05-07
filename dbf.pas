@@ -7,6 +7,7 @@ interface
 {$I dbf_common.inc}
 
 uses
+  {$IFDEF UNICODE}AnsiStrings,{$ENDIF}
   Classes,
   Db,
   dbf_common,
@@ -685,14 +686,14 @@ function TDbf.GetCurrentBuffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PChar{$E
 begin
   case State of
     dsFilter:     Result := FFilterBuffer;
-    dsCalcFields: Result := CalcBuffer;
+    dsCalcFields: Result := {$IFDEF DELPHI_XE4}PByte(CalcBuffer){$ELSE}CalcBuffer{$ENDIF};
 //    dsSetKey:     Result := FKeyBuffer;     // TO BE Implemented
   else
     if IsEmpty then
     begin
       Result := nil;
     end else begin
-      Result := ActiveBuffer;
+      Result := {$IFDEF DELPHI_XE4}PByte(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
     end;
   end;
   if Result <> nil then
@@ -1766,7 +1767,7 @@ begin
   Result := false;
   bVarIsArray := false;
   lstKeys := TList.Create;
-  FFilterBuffer := TempBuffer;
+  FFilterBuffer := {$IFDEF DELPHI_XE4}PByte(TempBuffer){$ELSE}TempBuffer{$ENDIF};
   SaveState := SetTempState(dsFilter);
   try
     GetFieldList(lstKeys, KeyFields);
@@ -1840,7 +1841,7 @@ begin
           Result := matchRes =  0;
       end;
     end;
-    FFilterBuffer := TempBuffer;
+    FFilterBuffer := {$IFDEF DELPHI_XE4}PByte(TempBuffer){$ELSE}TempBuffer{$ENDIF};
   end;
 end;
 
@@ -1994,7 +1995,7 @@ begin
     begin
       Result := FOnTranslate(Self, Src, Dest, ToOem);
       if Result = -1 then
-        Result := StrLen(Dest);
+        Result := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(Dest){$ELSE}StrLen(Dest){$ENDIF};
     end else begin
       if FTranslationMode <> tmNoneNeeded then
       begin
@@ -2152,9 +2153,9 @@ begin
   if FCursor <> nil then
   begin
     if State = dsCalcFields then
-      pBuffer := CalcBuffer
+      pBuffer := {$IFDEF DELPHI_XE4}PByte(CalcBuffer){$ELSE}CalcBuffer{$ENDIF}
     else
-      pBuffer := ActiveBuffer;
+      pBuffer := {$IFDEF DELPHI_XE4}PByte(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
     Result := pDbfRecord(pBuffer)^.SequentialRecNo;
   end else
     Result := 0;
@@ -2544,9 +2545,9 @@ begin
   if (FCursor <> nil) and (State <> dsInsert) then
   begin
     if State = dsCalcFields then
-      pBuffer := CalcBuffer
+      pBuffer := {$IFDEF DELPHI_XE4}PByte(CalcBuffer){$ELSE}CalcBuffer{$ENDIF}
     else
-      pBuffer := ActiveBuffer;
+      pBuffer := {$IFDEF DELPHI_XE4}PByte(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
     Result := pDbfRecord(pBuffer)^.BookmarkData.PhysicalRecNo;
   end else
     Result := -1;
@@ -2680,7 +2681,7 @@ end;
 procedure TDbf.ExtractKey(KeyBuffer: PAnsiChar);
 begin
   if FIndexFile <> nil then
-    StrCopy(FIndexFile.ExtractKeyFromBuffer(GetCurrentBuffer), KeyBuffer)
+    {$IFDEF DELPHI_XE4}AnsiStrings.StrCopy(FIndexFile.ExtractKeyFromBuffer(GetCurrentBuffer), KeyBuffer){$ELSE}StrCopy(FIndexFile.ExtractKeyFromBuffer(GetCurrentBuffer), KeyBuffer){$ENDIF}
   else
     KeyBuffer[0] := #0;
 end;
