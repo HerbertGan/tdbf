@@ -4,7 +4,8 @@ History of TDBF:
 Authors:
 
 - Pascal Ganaye - upto V5.002
-- Micha Nelissen - from there
+- Micha Nelissen - upto V6.9.2
+- Lucas Martin - from there
 
 thanks to various people helping on details
 
@@ -30,7 +31,10 @@ BUGS & WARNINGS
     - no codepage conversion available other than oem<->ansi
     - storedefs is not updated automatically when fielddefs are changed
 
+------------------------
+V7.0.0
 
+- compile fixes for delphi xe, xe2, xe3 and xe4 (patch by some authors and Lucas Martín)
 
 ------------------------
 V6.9.2
