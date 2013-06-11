@@ -259,7 +259,7 @@ type
     function  IsCursorOpen: Boolean; override; {virtual abstract}
     procedure SetBookmarkFlag(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PChar{$ENDIF}; Value: TBookmarkFlag); override; {virtual abstract}
     procedure SetBookmarkData(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PChar{$ENDIF}; Data: Pointer); override; {virtual abstract}
-    procedure SetFieldData(Field: TField; Buffer: Pointer); overload; override; {virtual abstract}
+    procedure SetFieldData(Field: TField; Buffer: {$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}); overload; override; {virtual abstract}
 
     { virtual methods (mostly optionnal) }
     function  GetDataSource: TDataSource; {$ifndef VER1_0}override;{$endif}
@@ -289,7 +289,7 @@ type
     destructor Destroy; override;
 
     { abstract methods }
-    function GetFieldData(Field: TField; Buffer: Pointer): Boolean; overload; override; {virtual abstract}
+    function GetFieldData(Field: TField;{$if RtlVersion >= 25}var {$ifend} Buffer: {$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}): Boolean; overload; override; {virtual abstract}
     { virtual methods (mostly optionnal) }
     procedure Resync(Mode: TResyncMode); override;
     function CreateBlobStream(Field: TField; Mode: TBlobStreamMode): TStream; override; {virtual}
@@ -299,9 +299,11 @@ type
     procedure Translate(Src, Dest: PAnsiChar; ToOem: Boolean); override; {virtual}
 {$endif}
 
-    function  GetFieldData(Field: TField; Buffer: Pointer; NativeFormat: Boolean): Boolean; overload;
+    function  GetFieldData(Field: TField;{$if RtlVersion >= 25}var {$ifend} Buffer: {$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}; NativeFormat: Boolean): Boolean; overload;
+
+    //function GetFieldData(Field: TField; Buffer: Pointer; NativeFormat: Boolean): Boolean; overload;
       {$ifdef SUPPORT_BACKWARD_FIELDDATA} override; {$endif}
-    procedure SetFieldData(Field: TField; Buffer: Pointer; NativeFormat: Boolean); overload;
+    procedure SetFieldData(Field: TField; Buffer: {$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}; NativeFormat: Boolean); overload;
       {$ifdef SUPPORT_BACKWARD_FIELDDATA} override; {$endif}
 
     function CompareBookmarks(Bookmark1, Bookmark2: TBookmark): Integer; override;
@@ -686,21 +688,21 @@ function TDbf.GetCurrentBuffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PChar{$E
 begin
   case State of
     dsFilter:     Result := FFilterBuffer;
-    dsCalcFields: Result := {$IFDEF DELPHI_XE4}PByte(CalcBuffer){$ELSE}CalcBuffer{$ENDIF};
+    dsCalcFields: Result := {$IFDEF DELPHI_XE4}TRecordBuffer(CalcBuffer){$ELSE}CalcBuffer{$ENDIF};
 //    dsSetKey:     Result := FKeyBuffer;     // TO BE Implemented
   else
     if IsEmpty then
     begin
       Result := nil;
     end else begin
-      Result := {$IFDEF DELPHI_XE4}PByte(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
+      Result := {$IFDEF DELPHI_XE4}TRecordBuffer(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
     end;
   end;
   if Result <> nil then
     Result := @PDbfRecord(Result)^.DeletedFlag;
 end;
 
-function TDbf.GetFieldData(Field: TField; Buffer: Pointer): Boolean; {override virtual abstract from TDataset}
+function TDbf.GetFieldData(Field: TField;{$if RtlVersion >= 25}var {$ifend} Buffer:{$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}): Boolean; {override virtual abstract from TDataset}
 begin
   Result := GetFieldData(Field, Buffer, true);
 end;
@@ -712,7 +714,7 @@ end;
 //  ftBCD:
 // ftDateTime is more difficult though
 
-function TDbf.GetFieldData(Field: TField; Buffer: Pointer; NativeFormat: Boolean): Boolean; {overload; override;}
+function TDbf.GetFieldData(Field: TField;{$if RtlVersion >= 25}var {$ifend} Buffer: {$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}; NativeFormat: Boolean): Boolean; {overload; override;}
 var
   Src: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PChar{$ENDIF};
 begin
@@ -730,11 +732,11 @@ begin
     Inc(PChar(Src), Field.Offset + GetRecordSize);
     Result := Boolean(Src[0]);
     if Result and (Buffer <> nil) then
-      Move(Src[1], Buffer^, Field.DataSize);
+      Move(Src[1], {$if RtlVersion >= 24}Buffer[0]{$else}Buffer^{$ifend}, Field.DataSize);//Move(Src[1], Buffer^, Field.DataSize); //posibles problemas xe3
   end;
 end;
 
-procedure TDbf.SetFieldData(Field: TField; Buffer: Pointer; NativeFormat: Boolean); {overload; override;}
+procedure TDbf.SetFieldData(Field: TField; Buffer: {$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}; NativeFormat: Boolean); {overload; override;}
 var
   Dst: PAnsiChar;
 begin
@@ -754,7 +756,7 @@ begin
     Boolean(Dst[0]) := Buffer <> nil;
 {$ENDIF}
     if Buffer <> nil then
-      Move(Buffer^, Dst[1], Field.DataSize)
+      Move({$if RtlVersion >= 24}Buffer[0]{$else}Buffer^{$ifend}, Dst[1], Field.DataSize) //Move(Buffer^, Dst[1], Field.DataSize)//posibles problemas xe3 fixed: codedeep
   end;     { end of ***** fkCalculated, fkLookup ***** }
   if not (State in [dsCalcFields, dsFilter, dsNewValue]) then begin
     DataEvent(deFieldChange, PtrInt(Field));
@@ -1767,7 +1769,7 @@ begin
   Result := false;
   bVarIsArray := false;
   lstKeys := TList.Create;
-  FFilterBuffer := {$IFDEF DELPHI_XE4}PByte(TempBuffer){$ELSE}TempBuffer{$ENDIF};
+  FFilterBuffer := {$IFDEF DELPHI_XE4}TRecordBuffer(TempBuffer){$ELSE}TempBuffer{$ENDIF};
   SaveState := SetTempState(dsFilter);
   try
     GetFieldList(lstKeys, KeyFields);
@@ -1841,7 +1843,7 @@ begin
           Result := matchRes =  0;
       end;
     end;
-    FFilterBuffer := {$IFDEF DELPHI_XE4}PByte(TempBuffer){$ELSE}TempBuffer{$ENDIF};
+    FFilterBuffer := {$IFDEF DELPHI_XE4}TRecordBuffer(TempBuffer){$ELSE}TempBuffer{$ENDIF};
   end;
 end;
 
@@ -2093,7 +2095,7 @@ begin
   pDbfRecord(Buffer)^.BookmarkData := pBookmarkData(Data)^;
 end;
 
-procedure TDbf.SetFieldData(Field: TField; Buffer: Pointer); {override virtual abstract from TDataset}
+procedure TDbf.SetFieldData(Field: TField; Buffer: {$if RtlVersion >= 24}TValueBuffer{$else}Pointer{$ifend}); {override virtual abstract from TDataset}
 begin
   SetFieldData(Field, Buffer, true);
 end;
@@ -2153,9 +2155,9 @@ begin
   if FCursor <> nil then
   begin
     if State = dsCalcFields then
-      pBuffer := {$IFDEF DELPHI_XE4}PByte(CalcBuffer){$ELSE}CalcBuffer{$ENDIF}
+      pBuffer := {$IFDEF DELPHI_XE4}TRecordBuffer(CalcBuffer){$ELSE}CalcBuffer{$ENDIF}
     else
-      pBuffer := {$IFDEF DELPHI_XE4}PByte(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
+      pBuffer := {$IFDEF DELPHI_XE4}TRecordBuffer(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
     Result := pDbfRecord(pBuffer)^.SequentialRecNo;
   end else
     Result := 0;
@@ -2545,9 +2547,9 @@ begin
   if (FCursor <> nil) and (State <> dsInsert) then
   begin
     if State = dsCalcFields then
-      pBuffer := {$IFDEF DELPHI_XE4}PByte(CalcBuffer){$ELSE}CalcBuffer{$ENDIF}
+      pBuffer := {$IFDEF DELPHI_XE4}TRecordBuffer(CalcBuffer){$ELSE}CalcBuffer{$ENDIF}
     else
-      pBuffer := {$IFDEF DELPHI_XE4}PByte(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
+      pBuffer := {$IFDEF DELPHI_XE4}TRecordBuffer(ActiveBuffer){$ELSE}ActiveBuffer{$ENDIF};
     Result := pDbfRecord(pBuffer)^.BookmarkData.PhysicalRecNo;
   end else
     Result := -1;

@@ -25,7 +25,8 @@ package tdbf_xe4_r;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'TDbf for Delphi 2010 runtime'}
+{$DESCRIPTION 'TDbf for Delphi xe4 runtime'}
+{$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
