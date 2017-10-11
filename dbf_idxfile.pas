@@ -5,6 +5,7 @@ interface
 {$I dbf_common.inc}
 
 uses
+ {$IFDEF UNICODE}AnsiStrings,{$ENDIF}
 {$ifdef WINDOWS}
   Windows,
 {$else}
@@ -47,7 +48,7 @@ type
   TIndexModifyMode = (mmNormal, mmDeleteRecall);
 
   TDbfLocaleErrorEvent = procedure(var Error: TLocaleError; var Solution: TLocaleSolution) of object;
-  TDbfCompareKeysEvent = function(Key1, Key2: PChar): Integer of object;
+  TDbfCompareKeysEvent = function(Key1, Key2: PAnsiChar): Integer of object;
 
   PDouble = ^Double;
   PInteger = ^Integer;
@@ -106,13 +107,11 @@ type
     FLowBracket: Integer;               //  = FLowIndex if FPageNo = FLowPage
     FLowIndex: Integer;
     FLowPage: Integer;
-    FLowPageTemp: Integer;
     FHighBracket: Integer;              //  = FHighIndex if FPageNo = FHighPage
     FHighIndex: Integer;
     FHighPage: Integer;
-    FHighPageTemp: Integer;
 
-    procedure LocalInsert(RecNo: Integer; Buffer: PChar; LowerPageNo: Integer);
+    procedure LocalInsert(RecNo: Integer; Buffer: PAnsiChar; LowerPageNo: Integer);
     procedure LocalDelete;
     procedure Delete;
 
@@ -127,7 +126,7 @@ type
     procedure RecurFirst;
     procedure RecurLast;
 
-    procedure SetEntry(RecNo: Integer; AKey: PChar; LowerPageNo: Integer);
+    procedure SetEntry(RecNo: Integer; AKey: PAnsiChar; LowerPageNo: Integer);
     procedure SetEntryNo(value: Integer);
     procedure SetPageNo(NewPageNo: Integer);
     procedure SetLowPage(NewPage: Integer);
@@ -138,9 +137,9 @@ type
   protected
     function GetEntry(AEntryNo: Integer): Pointer; virtual; abstract;
     function GetLowerPageNo: Integer; virtual; abstract;
-    function GetKeyData: PChar; virtual; abstract;
+    function GetKeyData: PAnsiChar; virtual; abstract;
     function GetNumEntries: Integer; virtual; abstract;
-    function GetKeyDataFromEntry(AEntry: Integer): PChar; virtual; abstract;
+    function GetKeyDataFromEntry(AEntry: Integer): PAnsiChar; virtual; abstract;
     function GetRecNo: Integer; virtual; abstract;
     function GetIsInnerNode: Boolean; virtual; abstract;
     procedure IncNumEntries; virtual; abstract;
@@ -166,10 +165,8 @@ type
     procedure RecalcWeight;
     procedure UpdateWeight;
     procedure Flush;
-    procedure SaveBracket;
-    procedure RestoreBracket;
 
-    property Key: PChar read GetKeyData;
+    property Key: PAnsiChar read GetKeyData;
     property Entry: Pointer read FEntry;
     property EntryNo: Integer read FEntryNo write SetEntryNo;
     property IndexFile: TIndexFile read FIndexFile;
@@ -194,30 +191,30 @@ type
     FTag: Pointer;
   protected
     function  GetHeaderPageNo: Integer; virtual; abstract;
-    function  GetTagName: string; virtual; abstract;
+    function  GetTagName: String; virtual; abstract;
     function  GetKeyFormat: Byte; virtual; abstract;
     function  GetForwardTag1: Byte; virtual; abstract;
     function  GetForwardTag2: Byte; virtual; abstract;
     function  GetBackwardTag: Byte; virtual; abstract;
     function  GetReserved: Byte; virtual; abstract;
-    function  GetKeyType: Char; virtual; abstract;
+    function  GetKeyType: AnsiChar; virtual; abstract;
     procedure SetHeaderPageNo(NewPageNo: Integer); virtual; abstract;
-    procedure SetTagName(NewName: string); virtual; abstract;
+    procedure SetTagName(NewName: String); virtual; abstract;
     procedure SetKeyFormat(NewFormat: Byte); virtual; abstract;
     procedure SetForwardTag1(NewTag: Byte); virtual; abstract;
     procedure SetForwardTag2(NewTag: Byte); virtual; abstract;
     procedure SetBackwardTag(NewTag: Byte); virtual; abstract;
     procedure SetReserved(NewReserved: Byte); virtual; abstract;
-    procedure SetKeyType(NewType: Char); virtual; abstract;
+    procedure SetKeyType(NewType: AnsiChar); virtual; abstract;
   public
     property HeaderPageNo: Integer read GetHeaderPageNo write SetHeaderPageNo;
-    property TagName: string read GetTagName write SetTagName;
+    property TagName: String read GetTagName write SetTagName;
     property KeyFormat:   Byte read GetKeyFormat   write SetKeyFormat;
     property ForwardTag1: Byte read GetForwardTag1 write SetForwardTag1;
     property ForwardTag2: Byte read GetForwardTag2 write SetForwardTag2;
     property BackwardTag: Byte read GetBackwardTag write SetBackwardTag;
     property Reserved: Byte read GetReserved write SetReserved;
-    property KeyType: Char read GetKeyType write SetKeyType;
+    property KeyType: AnsiChar read GetKeyType write SetKeyType;
     property Tag: Pointer read FTag write FTag;
   end;
 //===========================================================================
@@ -228,7 +225,6 @@ type
 {$endif}
   protected
     FIndexName: string;
-    FLastError: string;
     FParsers: array[0..MaxIndexes-1] of TDbfIndexParser;
     FIndexHeaders: array[0..MaxIndexes-1] of Pointer;
     FIndexHeaderModified: array[0..MaxIndexes-1] of Boolean;
@@ -247,14 +243,13 @@ type
     FTagOffset: Integer;
     FHeaderPageNo: Integer;
     FSelectedIndex: Integer;
-    FRangeIndex: Integer;
     FIsDescending: Boolean;
     FUniqueMode: TIndexUniqueType;
     FModifyMode: TIndexModifyMode;
     FHeaderLocked: Integer;   // used to remember which header page we have locked
-    FKeyBuffer: array[0..100] of Char;
-    FLowBuffer: array[0..100] of Char;
-    FHighBuffer: array[0..100] of Char;
+    FKeyBuffer: array[0..100] of AnsiChar;
+    FLowBuffer: array[0..100] of AnsiChar;
+    FHighBuffer: array[0..100] of AnsiChar;
     FEntryBof: Pointer;
     FEntryEof: Pointer;
     FDbfFile: Pointer;
@@ -262,7 +257,7 @@ type
     FOpened: Boolean;
     FRangeActive: Boolean;
     FUpdateMode: TIndexUpdateMode;
-    FUserKey: PChar;        // find / insert key
+    FUserKey: PAnsiChar;        // find / insert key
     FUserRecNo: Integer;    // find / insert recno
     FUserBCD: array[0..10] of Byte;
     FUserNumeric: Double;
@@ -276,7 +271,6 @@ type
     function  GetNewPageNo: Integer;
     procedure TouchHeader(AHeader: Pointer);
     function  CreateTempFile(BaseName: string): TPagedFile;
-    procedure ConstructInsertErrorMsg;
     procedure WriteIndexHeader(AIndex: Integer);
     procedure SelectIndexVars(AIndex: Integer);
     procedure CalcKeyProperties;
@@ -285,12 +279,11 @@ type
     function  CalcTagOffset(AIndex: Integer): Pointer;
 
     function  FindKey(AInsert: boolean): Integer;
-    function  InsertKey(Buffer: PChar): Boolean;
-    procedure DeleteKey(Buffer: PChar);
-    function  InsertCurrent: Boolean;
+    procedure InsertKey(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
+    procedure DeleteKey(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
+    procedure InsertCurrent;
     procedure DeleteCurrent;
-    function  UpdateCurrent(PrevBuffer, NewBuffer: PChar): Boolean;
-    function  UpdateIndex(Index: Integer; PrevBuffer, NewBuffer: PChar): Boolean;
+    procedure UpdateCurrent(PrevBuffer, NewBuffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
     procedure ReadIndexes;
     procedure Resync(Relative: boolean);
     procedure ResyncRoot;
@@ -305,15 +298,15 @@ type
     function  WalkPrev: boolean;
     function  WalkNext: boolean;
     
-    function  CompareKeysNumericNDX(Key1, Key2: PChar): Integer;
-    function  CompareKeysNumericMDX(Key1, Key2: PChar): Integer;
-    function  CompareKeysString(Key1, Key2: PChar): Integer;
+    function  CompareKeysNumericNDX(Key1, Key2: PAnsiChar): Integer;
+    function  CompareKeysNumericMDX(Key1, Key2: PAnsiChar): Integer;
+    function  CompareKeysString(Key1, Key2: PAnsiChar): Integer;
 
     // property functions
     function  GetName: string;
     function  GetDbfLanguageId: Byte;
     function  GetKeyLen: Integer;
-    function  GetKeyType: Char;
+    function  GetKeyType: AnsiChar;
 //    function  GetIndexCount Integer;
     function  GetExpression: string;
     function  GetPhysicalRecNo: Integer;
@@ -337,24 +330,22 @@ type
     procedure AddNewLevel;
     procedure UnlockHeader;
     procedure InsertError;
-    function  Insert(RecNo: Integer; Buffer: PChar): Boolean;
-    function  Update(RecNo: Integer; PrevBuffer, NewBuffer: PChar): Boolean;
-    procedure Delete(RecNo: Integer; Buffer: PChar);
-    function  CheckKeyViolation(Buffer: PChar): Boolean;
-    procedure RecordDeleted(RecNo: Integer; Buffer: PChar);
-    function  RecordRecalled(RecNo: Integer; Buffer: PChar): Boolean;
+    procedure Insert(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
+    procedure Update(RecNo: Integer; PrevBuffer, NewBuffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
+    procedure Delete(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
+    function  CheckKeyViolation(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF}): Boolean;
+    procedure RecordDeleted(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
+    procedure RecordRecalled(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
     procedure DeleteIndex(const AIndexName: string);
     procedure RepageFile;
     procedure CompactFile;
     procedure PrepareRename(NewFileName: string);
 
     procedure CreateIndex(FieldDesc, TagName: string; Options: TIndexOptions);
-    function  ExtractKeyFromBuffer(Buffer: PChar): PChar;
-    function  SearchKey(Key: PChar; SearchType: TSearchKeyType): Boolean;
-    function  Find(RecNo: Integer; Buffer: PChar): Integer;
+    function  ExtractKeyFromBuffer(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF}): PAnsiChar;
+    function  SearchKey(Key: PAnsiChar; SearchType: TSearchKeyType): Boolean;
+    function  Find(RecNo: Integer; Buffer: PAnsiChar): Integer;
     function  IndexOf(const AIndexName: string): Integer;
-    procedure DisableRange;
-    procedure EnableRange;
 
     procedure GetIndexNames(const AList: TStrings);
     procedure GetIndexInfo(const AIndexName: string; IndexDef: TDbfIndexDef);
@@ -366,17 +357,17 @@ type
     function  Next: Boolean;
     function  Prev: Boolean;
 
-    procedure SetRange(LowRange, HighRange: PChar);
+    procedure SetRange(LowRange, HighRange: PAnsiChar);
     procedure CancelRange;
-    function  MatchKey(UserKey: PChar): Integer;
-    function  CompareKey(Key: PChar): Integer;
-    function  CompareKeys(Key1, Key2: PChar): Integer;
-    function  PrepareKey(Buffer: PChar; ResultType: TExpressionType): PChar;
+    function  MatchKey(UserKey: PAnsiChar): Integer;
+    function  CompareKey(Key: PAnsiChar): Integer;
+    function  CompareKeys(Key1, Key2: PAnsiChar): Integer;
+    function  PrepareKey(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF}; ResultType: TExpressionType): {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF};
 
     property KeyLen: Integer read GetKeyLen;
     property IndexVersion: TXBaseVersion read FIndexVersion;
     property EntryHeaderSize: Integer read FEntryHeaderSize;
-    property KeyType: Char read GetKeyType;
+    property KeyType: AnsiChar read GetKeyType;
 
     property SequentialRecordCount: Integer read GetSequentialRecordCount;
     property SequentialRecNo: Integer read GetSequentialRecNo write SetSequentialRecNo;
@@ -408,8 +399,6 @@ uses
   dbf_dbffile,
   dbf_fields,
   dbf_str,
-  dbf_prssupp,
-  dbf_prscore,
   dbf_lang;
 
 const
@@ -445,7 +434,7 @@ type
     Year       : Byte;     // 1
     Month      : Byte;     // 2
     Day        : Byte;     // 3
-    FileName   : array[0..15] of Char;   // 4..19
+    FileName   : array[0..15] of AnsiChar;   // 4..19
     BlockSize  : Word;     // 20..21
     BlockAdder : Word;     // 22..23
     ProdFlag   : Byte;     // 24
@@ -471,14 +460,14 @@ type
   PMdx4Tag = ^rMdx4Tag;
   rMdx4Tag = record
     HeaderPageNo   : Integer;      // 0..3
-    TagName        : array [0..10] of Char;  // 4..14 of Byte
+    TagName        : array [0..10] of AnsiChar;  // 4..14 of Byte
     KeyFormat      : Byte;         // 15     00h: Calculated
                                    //        10h: Data Field
     ForwardTag1    : Byte;         // 16
     ForwardTag2    : Byte;         // 17
     BackwardTag    : Byte;         // 18
     Reserved       : Byte;         // 19
-    KeyType        : Char;         // 20     C : Character
+    KeyType        : AnsiChar;         // 20     C : Character
                                    //        N : Numerical
                                    //        D : Date
   end;
@@ -486,14 +475,14 @@ type
   PMdx7Tag = ^rMdx7Tag;
   rMdx7Tag = record
     HeaderPageNo   : Integer;      // 0..3
-    TagName        : array [0..32] of Char;  // 4..36 of Byte
+    TagName        : array [0..32] of AnsiChar;  // 4..36 of Byte
     KeyFormat      : Byte;         // 37     00h: Calculated
                                    //        10h: Data Field
     ForwardTag1    : Byte;         // 38
     ForwardTag2    : Byte;         // 39
     BackwardTag    : Byte;         // 40
     Reserved       : Byte;         // 41
-    KeyType        : Char;         // 42     C : Character
+    KeyType        : AnsiChar;         // 42     C : Character
                                    //        N : Numerical
                                    //        D : Date
   end;
@@ -507,7 +496,7 @@ type
                                //        10h: String
                                //        20h: Distinct
                                //        40h: Unique
-    KeyType        : Char;     // 9      C : Character
+    KeyType        : AnsiChar;     // 9      C : Character
                                //        N : Numerical
                                //        D : Date
     Dummy          : Word;     // 10..11
@@ -519,7 +508,7 @@ type
     Version        : Word;     // 20..21
     Dummy2         : Byte;     // 22
     Unique         : Byte;     // 23
-    KeyDesc        : array [0..219] of Char; // 24..243
+    KeyDesc        : array [0..219] of AnsiChar; // 24..243
     Dummy3         : Byte;     // 244
     ForExist       : Byte;     // 245
     KeyExist       : Byte;     // 246
@@ -533,7 +522,7 @@ type
   PMdxEntry = ^rMdxEntry;
   rMdxEntry = record
     RecBlockNo: Longint;       // 0..3   either recno or blockno
-    KeyData   : Char;          // 4..    first byte of data, context => length
+    KeyData   : AnsiChar;          // 4..    first byte of data, context => length
   end;
 
   PMdxPage = ^rMdxPage;
@@ -547,7 +536,7 @@ type
   rNdxEntry  = record
     LowerPageNo: Integer;      //  0..3 lower page
     RecNo      : Integer;      //  4..7 recno
-    KeyData    : Char;
+    KeyData    : AnsiChar;
   end;
 
   PNdxPage  = ^rNdxPage;
@@ -561,9 +550,9 @@ type
   protected
     function GetEntry(AEntryNo: Integer): Pointer; override;
     function GetLowerPageNo: Integer; override;
-    function GetKeyData: PChar; override;
+    function GetKeyData: PAnsiChar; override;
     function GetNumEntries: Integer; override;
-    function GetKeyDataFromEntry(AEntry: Integer): PChar; override;
+    function GetKeyDataFromEntry(AEntry: Integer): PAnsiChar; override;
     function GetRecNo: Integer; override;
     function GetIsInnerNode: Boolean; override;
     procedure IncNumEntries; override;
@@ -579,9 +568,9 @@ type
   protected
     function GetEntry(AEntryNo: Integer): Pointer; override;
     function GetLowerPageNo: Integer; override;
-    function GetKeyData: PChar; override;
+    function GetKeyData: PAnsiChar; override;
     function GetNumEntries: Integer; override;
-    function GetKeyDataFromEntry(AEntry: Integer): PChar; override;
+    function GetKeyDataFromEntry(AEntry: Integer): PAnsiChar; override;
     function GetRecNo: Integer; override;
     function GetIsInnerNode: Boolean; override;
     procedure IncNumEntries; override;
@@ -593,40 +582,40 @@ type
   TMdx4Tag = class(TIndexTag)
   protected
     function  GetHeaderPageNo: Integer; override;
-    function  GetTagName: string; override;
+    function  GetTagName: String; override;
     function  GetKeyFormat: Byte; override;
     function  GetForwardTag1: Byte; override;
     function  GetForwardTag2: Byte; override;
     function  GetBackwardTag: Byte; override;
     function  GetReserved: Byte; override;
-    function  GetKeyType: Char; override;
+    function  GetKeyType: AnsiChar; override;
     procedure SetHeaderPageNo(NewPageNo: Integer); override;
-    procedure SetTagName(NewName: string); override;
+    procedure SetTagName(NewName: String); override;
     procedure SetKeyFormat(NewFormat: Byte); override;
     procedure SetForwardTag1(NewTag: Byte); override;
     procedure SetForwardTag2(NewTag: Byte); override;
     procedure SetBackwardTag(NewTag: Byte); override;
     procedure SetReserved(NewReserved: Byte); override;
-    procedure SetKeyType(NewType: Char); override;
+    procedure SetKeyType(NewType: AnsiChar); override;
   end;
 //---------------------------------------------------------------------------
   TMdx7Tag = class(TIndexTag)
     function  GetHeaderPageNo: Integer; override;
-    function  GetTagName: string; override;
+    function  GetTagName: String; override;
     function  GetKeyFormat: Byte; override;
     function  GetForwardTag1: Byte; override;
     function  GetForwardTag2: Byte; override;
     function  GetBackwardTag: Byte; override;
     function  GetReserved: Byte; override;
-    function  GetKeyType: Char; override;
+    function  GetKeyType: AnsiChar; override;
     procedure SetHeaderPageNo(NewPageNo: Integer); override;
-    procedure SetTagName(NewName: string); override;
+    procedure SetTagName(NewName: String); override;
     procedure SetKeyFormat(NewFormat: Byte); override;
     procedure SetForwardTag1(NewTag: Byte); override;
     procedure SetForwardTag2(NewTag: Byte); override;
     procedure SetBackwardTag(NewTag: Byte); override;
     procedure SetReserved(NewReserved: Byte); override;
-    procedure SetKeyType(NewType: Char); override;
+    procedure SetKeyType(NewType: AnsiChar); override;
   end;
 
 var
@@ -637,22 +626,12 @@ var
 
   LCIDList: TLCIDList;
 
-procedure IncWordLE(var AVariable: Word; Amount: Integer);
-begin
-  AVariable := SwapWordLE(SwapWordLE(AVariable) + Amount);
-end;
-
-procedure IncIntLE(var AVariable: Integer; Amount: Integer);
-begin
-  AVariable := SwapIntLE(DWord(Integer(SwapIntLE(AVariable)) + Amount));
-end;
-
 //==========================================================
 // Locale support for all versions of Delphi/C++Builder
 
-function LocaleCallBack(LocaleString: PChar): Integer; stdcall;
+function LocaleCallBack(LocaleString: PAnsiChar): Integer; stdcall;
 begin
-  LCIDList.Add(Pointer(StrToInt('$'+LocaleString)));
+  LCIDList.Add(Pointer(StrToInt(String('$'+LocaleString))));
   Result := 1;
 end;
 
@@ -667,8 +646,9 @@ begin
   EnumSystemLocales(@LocaleCallBack, LCID_SUPPORTED);
 end;
 
-{ TIndexPage }
-
+//==========================================================
+//============ TIndexPage
+//==========================================================
 constructor TIndexPage.Create(Parent: TIndexFile);
 begin
   FIndexFile := Parent;
@@ -738,7 +718,7 @@ begin
   end;
 end;
 
-procedure TIndexPage.LocalInsert(RecNo: Integer; Buffer: PChar; LowerPageNo: Integer);
+procedure TIndexPage.LocalInsert(RecNo: Integer; Buffer: PAnsiChar; LowerPageNo: Integer);
   // *) assumes there is at least one entry free
 var
   source, dest: Pointer;
@@ -749,7 +729,7 @@ begin
   // check assertions
   lNumEntries := GetNumEntries;
   // if this is inner node, we can only store one less than max entries
-  numKeysAvail := SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.NumKeys) - lNumEntries;
+  numKeysAvail := PIndexHdr(FIndexFile.IndexHeader)^.NumKeys - lNumEntries;
   if FLowerPage <> nil then
     dec(numKeysAvail);
   // check if free space
@@ -757,7 +737,7 @@ begin
   // first free up some space
   source := FEntry;
   dest := GetEntry(FEntryNo + 1);
-  size := (lNumEntries - EntryNo) * SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen);
+  size := (lNumEntries - EntryNo) * PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen;
   // if 'rightmost' entry, copy pageno too
   if (FLowerPage <> nil) or (numKeysAvail > 1) then
     size := size + FIndexFile.EntryHeaderSize;
@@ -794,7 +774,7 @@ begin
   begin
     source := GetEntry(EntryNo + 1);
     dest := FEntry;
-    size := (FHighIndex - EntryNo) * SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen);
+    size := (FHighIndex - EntryNo) * PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen;
     Move(source^, dest^, size);
   end else
   // no need to update when we're about to remove the only entry
@@ -837,7 +817,7 @@ end;
 function TIndexPage.MatchKey: Integer;
   // assumes Buffer <> nil
 var
-  keyData: PChar;
+  keyData: PAnsiChar;
 begin
   // get key data
   keyData := GetKeyData;
@@ -943,11 +923,11 @@ begin
     FEntry := GetEntry(FEntryNo);
 end;
 
-procedure TIndexPage.SetEntry(RecNo: Integer; AKey: PChar; LowerPageNo: Integer);
+procedure TIndexPage.SetEntry(RecNo: Integer; AKey: PAnsiChar; LowerPageNo: Integer);
 var
-  keyData: PChar;
+  keyData: PAnsiChar;
 {$ifdef TDBF_INDEX_CHECK}
-  prevKeyData, curKeyData, nextKeyData: PChar;
+  prevKeyData, curKeyData, nextKeyData: PAnsiChar;
 {$endif}
 begin
   // get num entries
@@ -958,9 +938,9 @@ begin
     UpperPage.SetEntry(0, AKey, FPageNo);
 {  if PIndexHdr(FIndexFile.IndexHeader).KeyType = 'C' then  }
     if AKey <> nil then
-      Move(AKey^, keyData^, SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.KeyLen))
+      Move(AKey^, keyData^, PIndexHdr(FIndexFile.IndexHeader)^.KeyLen)
     else
-      PChar(keyData)^ := #0;
+      PAnsiChar(keyData)^ := #0;
 {
   else
     if AKey <> nil then
@@ -1010,7 +990,7 @@ procedure TIndexPage.Split;
 var
   NewPage: TIndexPage;
   source, dest: Pointer;
-  paKeyData: PChar;
+  paKeyData: PAnsiChar;
   size, oldEntryNo: Integer;
   splitRight, lNumEntries, numEntriesNew: Integer;
   saveLow, saveHigh: Integer;
@@ -1072,7 +1052,7 @@ begin
     // compute source, dest
     dest := NewPage.GetEntry(0);
     source := GetEntry(splitRight);
-    size := numEntriesNew * SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen);
+    size := numEntriesNew * PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen;
     // if inner node, copy rightmost entry too
     if FLowerPage <> nil then
       size := size + FIndexFile.EntryHeaderSize;
@@ -1179,7 +1159,7 @@ procedure TIndexPage.RecalcWeight;
 begin
   if FLowerPage <> nil then
   begin
-    FWeight := FLowerPage.Weight * SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.NumKeys);
+    FWeight := FLowerPage.Weight * PIndexHdr(FIndexFile.IndexHeader)^.NumKeys;
   end else begin
     FWeight := 1;
   end;
@@ -1241,7 +1221,7 @@ end;
 
 function TMdxPage.GetIsInnerNode: Boolean;
 begin
-  Result := SwapIntLE(PMdxPage(FPageBuffer)^.NumEntries) < SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.NumKeys);
+  Result := PMdxPage(FPageBuffer)^.NumEntries < PIndexHdr(FIndexFile.IndexHeader)^.NumKeys;
   // if there is still an entry after the last one, this has to be an inner node
   if Result then
     Result := PMdxEntry(GetEntry(PMdxPage(FPageBuffer)^.NumEntries))^.RecBlockNo <> 0;
@@ -1396,18 +1376,6 @@ begin
     FLowerPage.RecurLast;
 end;
 
-procedure TIndexPage.SaveBracket;
-begin
-  FLowPageTemp := FLowPage;
-  FHighPageTemp := FHighPage;
-end;
-
-procedure TIndexPage.RestoreBracket;
-begin
-  FLowPage := FLowPageTemp;
-  FHighPage := FHighPageTemp;
-end;
-
 //==============================================================================
 //============ Mdx specific access routines
 //==============================================================================
@@ -1415,8 +1383,8 @@ end;
 function TMdxPage.GetEntry(AEntryNo: Integer): Pointer;
 begin
   // get base + offset
-  Result := PChar(@PMdxPage(PageBuffer)^.FirstEntry) + (SwapWordLE(PIndexHdr(
-    IndexFile.IndexHeader)^.KeyRecLen) * AEntryNo);
+  Result := PAnsiChar(@PMdxPage(PageBuffer)^.FirstEntry) + (PIndexHdr(
+    IndexFile.IndexHeader)^.KeyRecLen * AEntryNo);
 end;
 
 function TMdxPage.GetLowerPageNo: Integer;
@@ -1425,60 +1393,60 @@ begin
 //  if LowerPage = nil then
 //    Result := 0
 //  else
-    Result := SwapIntLE(PMdxEntry(Entry)^.RecBlockNo);
+    Result := PMdxEntry(Entry)^.RecBlockNo;
 end;
 
-function TMdxPage.GetKeyData: PChar;
+function TMdxPage.GetKeyData: PAnsiChar;
 begin
   Result := @PMdxEntry(Entry)^.KeyData;
 end;
 
 function TMdxPage.GetNumEntries: Integer;
 begin
-  Result := SwapWordLE(PMdxPage(PageBuffer)^.NumEntries);
+  Result := PMdxPage(PageBuffer)^.NumEntries;
 end;
 
-function TMdxPage.GetKeyDataFromEntry(AEntry: Integer): PChar;
+function TMdxPage.GetKeyDataFromEntry(AEntry: Integer): PAnsiChar;
 begin
   Result := @PMdxEntry(GetEntry(AEntry))^.KeyData;
 end;
 
 function TMdxPage.GetRecNo: Integer;
 begin
-  Result := SwapIntLE(PMdxEntry(Entry)^.RecBlockNo);
+  Result := PMdxEntry(Entry)^.RecBlockNo;
 end;
 
 procedure TMdxPage.SetNumEntries(NewNum: Integer);
 begin
-  PMdxPage(PageBuffer)^.NumEntries := SwapIntLE(NewNum);
+  PMdxPage(PageBuffer)^.NumEntries := NewNum;
 end;
 
 procedure TMdxPage.IncNumEntries;
 begin
-  IncIntLE(PMdxPage(PageBuffer)^.NumEntries, 1);
+  Inc(PMdxPage(PageBuffer)^.NumEntries);
 end;
 
 procedure TMdxPage.SetRecLowerPageNo(NewRecNo, NewPageNo: Integer);
 begin
   if FLowerPage = nil then
-    PMdxEntry(Entry)^.RecBlockNo := SwapIntLE(NewRecNo)
+    PMdxEntry(Entry)^.RecBlockNo := NewRecNo
   else
-    PMdxEntry(Entry)^.RecBlockNo := SwapIntLE(NewPageNo);
+    PMdxEntry(Entry)^.RecBlockNo := NewPageNo;
 end;
 
 procedure TMdxPage.SetRecLowerPageNoOfEntry(AEntry, NewRecNo, NewPageNo: Integer);
 begin
   if FLowerPage = nil then
-    PMdxEntry(GetEntry(AEntry))^.RecBlockNo := SwapIntLE(NewRecNo)
+    PMdxEntry(GetEntry(AEntry))^.RecBlockNo := NewRecNo
   else
-    PMdxEntry(GetEntry(AEntry))^.RecBlockNo := SwapIntLE(NewPageNo);
+    PMdxEntry(GetEntry(AEntry))^.RecBlockNo := NewPageNo;
 end;
 
 {$ifdef TDBF_UPDATE_FIRST_LAST_NODE}
 
 procedure TMdxPage.SetPrevBlock(NewBlock: Integer);
 begin
-  PMdxPage(PageBuffer)^.PrevBlock := SwapIntLE(NewBlock);
+  PMdxPage(PageBuffer)^.PrevBlock := NewBlock;
 end;
 
 {$endif}
@@ -1490,8 +1458,7 @@ end;
 function TNdxPage.GetEntry(AEntryNo: Integer): Pointer;
 begin
   // get base + offset
-  Result := PChar(@PNdxPage(PageBuffer)^.FirstEntry) + 
-    (SwapWordLE(PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen) * AEntryNo);
+  Result := PAnsiChar(@PNdxPage(PageBuffer)^.FirstEntry) + (PIndexHdr(FIndexFile.IndexHeader)^.KeyRecLen * AEntryNo);
 end;
 
 function TNdxPage.GetLowerPageNo: Integer;
@@ -1500,49 +1467,49 @@ begin
 //  if LowerPage = nil then
 //    Result := 0
 //  else
-    Result := SwapIntLE(PNdxEntry(Entry)^.LowerPageNo)
+    Result := PNdxEntry(Entry)^.LowerPageNo
 end;
 
 function TNdxPage.GetRecNo: Integer;
 begin
-  Result := SwapIntLE(PNdxEntry(Entry)^.RecNo);
+  Result := PNdxEntry(Entry)^.RecNo;
 end;
 
-function TNdxPage.GetKeyData: PChar;
+function TNdxPage.GetKeyData: PAnsiChar;
 begin
   Result := @PNdxEntry(Entry)^.KeyData;
 end;
 
-function TNdxPage.GetKeyDataFromEntry(AEntry: Integer): PChar;
+function TNdxPage.GetKeyDataFromEntry(AEntry: Integer): PAnsiChar;
 begin
   Result := @PNdxEntry(GetEntry(AEntry))^.KeyData;
 end;
 
 function TNdxPage.GetNumEntries: Integer;
 begin
-  Result := SwapIntLE(PNdxPage(PageBuffer)^.NumEntries);
+  Result := PNdxPage(PageBuffer)^.NumEntries;
 end;
 
 procedure TNdxPage.IncNumEntries;
 begin
-  IncIntLE(PNdxPage(PageBuffer)^.NumEntries, 1);
+  Inc(PNdxPage(PageBuffer)^.NumEntries);
 end;
 
 procedure TNdxPage.SetNumEntries(NewNum: Integer);
 begin
-  PNdxPage(PageBuffer)^.NumEntries := SwapIntLE(NewNum);
+  PNdxPage(PageBuffer)^.NumEntries := NewNum;
 end;
 
 procedure TNdxPage.SetRecLowerPageNo(NewRecNo, NewPageNo: Integer);
 begin
-  PNdxEntry(Entry)^.RecNo := SwapIntLE(NewRecNo);
-  PNdxEntry(Entry)^.LowerPageNo := SwapIntLE(NewPageNo);
+  PNdxEntry(Entry)^.RecNo := NewRecNo;
+  PNdxEntry(Entry)^.LowerPageNo := NewPageNo;
 end;
 
 procedure TNdxPage.SetRecLowerPageNoOfEntry(AEntry, NewRecNo, NewPageNo: Integer);
 begin
-  PNdxEntry(GetEntry(AEntry))^.RecNo := SwapIntLE(NewRecNo);
-  PNdxEntry(GetEntry(AEntry))^.LowerPageNo := SwapIntLE(NewPageNo);
+  PNdxEntry(GetEntry(AEntry))^.RecNo := NewRecNo;
+  PNdxEntry(GetEntry(AEntry))^.LowerPageNo := NewPageNo;
 end;
 
 //==============================================================================
@@ -1551,12 +1518,12 @@ end;
 
 function TMdx4Tag.GetHeaderPageNo: Integer;
 begin
-  Result := SwapIntLE(PMdx4Tag(Tag)^.HeaderPageNo);
+  Result := PMdx4Tag(Tag)^.HeaderPageNo;
 end;
 
-function TMdx4Tag.GetTagName: string;
+function TMdx4Tag.GetTagName: String;
 begin
-  Result := PMdx4Tag(Tag)^.TagName;
+  Result := string(PMdx4Tag(Tag)^.TagName);
 end;
 
 function TMdx4Tag.GetKeyFormat: Byte;
@@ -1584,19 +1551,19 @@ begin
   Result := PMdx4Tag(Tag)^.Reserved;
 end;
 
-function TMdx4Tag.GetKeyType: Char;
+function TMdx4Tag.GetKeyType: AnsiChar;
 begin
   Result := PMdx4Tag(Tag)^.KeyType;
 end;
 
 procedure TMdx4Tag.SetHeaderPageNo(NewPageNo: Integer);
 begin
-  PMdx4Tag(Tag)^.HeaderPageNo := SwapIntLE(NewPageNo);
+  PMdx4Tag(Tag)^.HeaderPageNo := NewPageNo;
 end;
 
-procedure TMdx4Tag.SetTagName(NewName: string);
+procedure TMdx4Tag.SetTagName(NewName: String);
 begin
-  StrPLCopy(PMdx4Tag(Tag)^.TagName, NewName, 10);
+  StrPLCopy(PChar(string(PMdx4Tag(Tag)^.TagName)), NewName, 10);
   PMdx4Tag(Tag)^.TagName[10] := #0;
 end;
 
@@ -1625,7 +1592,7 @@ begin
   PMdx4Tag(Tag)^.Reserved := NewReserved;
 end;
 
-procedure TMdx4Tag.SetKeyType(NewType: Char);
+procedure TMdx4Tag.SetKeyType(NewType: AnsiChar);
 begin
   PMdx4Tag(Tag)^.KeyType := NewType;
 end;
@@ -1636,12 +1603,12 @@ end;
 
 function TMdx7Tag.GetHeaderPageNo: Integer;
 begin
-  Result := SwapIntLE(PMdx7Tag(Tag)^.HeaderPageNo);
+  Result := PMdx7Tag(Tag)^.HeaderPageNo;
 end;
 
-function TMdx7Tag.GetTagName: string;
+function TMdx7Tag.GetTagName: String;
 begin
-  Result := PMdx7Tag(Tag)^.TagName;
+  Result := string(PMdx7Tag(Tag)^.TagName);
 end;
 
 function TMdx7Tag.GetKeyFormat: Byte;
@@ -1669,19 +1636,19 @@ begin
   Result := PMdx7Tag(Tag)^.Reserved;
 end;
 
-function TMdx7Tag.GetKeyType: Char;
+function TMdx7Tag.GetKeyType: AnsiChar;
 begin
   Result := PMdx7Tag(Tag)^.KeyType;
 end;
 
 procedure TMdx7Tag.SetHeaderPageNo(NewPageNo: Integer);
 begin
-  PMdx7Tag(Tag)^.HeaderPageNo := SwapIntLE(NewPageNo);
+  PMdx7Tag(Tag)^.HeaderPageNo := NewPageNo;
 end;
 
-procedure TMdx7Tag.SetTagName(NewName: string);
+procedure TMdx7Tag.SetTagName(NewName: String);
 begin
-  StrPLCopy(PMdx7Tag(Tag)^.TagName, NewName, 32);
+  StrPLCopy(PChar(string(PMdx7Tag(Tag)^.TagName)), NewName, 10);
   PMdx7Tag(Tag)^.TagName[32] := #0;
 end;
 
@@ -1710,7 +1677,7 @@ begin
   PMdx7Tag(Tag)^.Reserved := NewReserved;
 end;
 
-procedure TMdx7Tag.SetKeyType(NewType: Char);
+procedure TMdx7Tag.SetKeyType(NewType: AnsiChar);
 begin
   PMdx7Tag(Tag)^.KeyType := NewType;
 end;
@@ -1718,49 +1685,31 @@ end;
 { TDbfIndexParser }
 
 procedure TDbfIndexParser.ValidateExpression(AExpression: string);
-const
-  AnsiStrFuncs: array[0..13] of TExprFunc = (FuncUppercase, FuncLowercase, FuncStrI_EQ,
-    FuncStrIP_EQ, FuncStrI_NEQ, FuncStrI_LT, FuncStrI_GT, FuncStrI_LTE, FuncStrI_GTE,
-    FuncStrP_EQ, FuncStr_LT, FuncStr_GT, FuncStr_LTE, FuncStr_GTE);
-  AnsiFuncsToMode: array[boolean] of TStringFieldMode = (smRaw, smAnsi);
 var
-  TempRec: PExpressionRec;
-  TempBuffer: pchar;
-  I: integer;
-  hasAnsiFuncs: boolean;
+  TempBuffer: PAnsiChar;
 begin
-  TempRec := CurrentRec;
-  hasAnsiFuncs := false;
-  while not hasAnsiFuncs and (TempRec <> nil) do
-  begin
-    for I := Low(AnsiStrFuncs) to High(AnsiStrFuncs) do
-      if @TempRec^.Oper = @AnsiStrFuncs[I] then
-      begin
-        hasAnsiFuncs := true;
-        break;
+  // set result len for fixed length expressions / fields
+  case ResultType of
+    etBoolean:  FResultLen := 1;
+    etInteger:  FResultLen := 4;
+    etFloat:    FResultLen := 8;
+    etDateTime: FResultLen := 8;
+    etString:
+    begin
+      // make empty record
+      GetMem(TempBuffer, TDbfFile(DbfFile).RecordSize);
+      try
+        TDbfFile(DbfFile).InitRecord(TempBuffer);
+        FResultLen := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(ExtractFromBuffer(TempBuffer)){$ELSE}StrLen(ExtractFromBuffer(TempBuffer)){$ENDIF};
+      finally
+        FreeMem(TempBuffer);
       end;
-    TempRec := TempRec^.Next;
-  end;
-
-  StringFieldMode := AnsiFuncsToMode[hasAnsiFuncs];
-
-  FResultLen := inherited ResultLen;
-
-  if FResultLen = -1 then
-  begin
-    // make empty record
-    GetMem(TempBuffer, TDbfFile(DbfFile).RecordSize);
-    try
-      TDbfFile(DbfFile).InitRecord(TempBuffer);
-      FResultLen := StrLen(ExtractFromBuffer(TempBuffer));
-    finally
-      FreeMem(TempBuffer);
     end;
   end;
 
   // check if expression not too long
-  if FResultLen > 100 then
-    raise EDbfError.CreateFmt(STRING_INDEX_EXPRESSION_TOO_LONG, [AExpression, FResultLen]);
+  {if FResultLen > 100 then
+    raise EDbfError.CreateFmt(STRING_INDEX_EXPRESSION_TOO_LONG, [AExpression, FResultLen]);}
 end;
 
 //==============================================================================
@@ -1778,7 +1727,6 @@ begin
   FUpdateMode := umCurrent;
   FModifyMode := mmNormal;
   FTempMode := TDbfFile(ADbfFile).TempMode;
-  FRangeIndex := -1;
   SelectIndexVars(-1);
   for I := 0 to MaxIndexes - 1 do
   begin
@@ -1890,7 +1838,7 @@ begin
       FRoot := FRoots[0];
       FSelectedIndex := 0;
       // parse index expression
-      FCurrentParser.ParseExpression(PIndexHdr(FIndexHeader)^.KeyDesc);
+      FCurrentParser.ParseExpression(String(PIndexHdr(FIndexHeader)^.KeyDesc));
       // set index locale
       FCollation := BINARY_COLLATION;
     end;
@@ -2046,7 +1994,7 @@ end;
 procedure TIndexFile.Clear;
 var
   year, month, day: Word;
-  pos, prevSelIndex, pageno: Integer;
+  pos, prevSelIndex: Integer;
   DbfLangId: Byte;
 begin
   // flush cache to prevent reading corrupted data
@@ -2063,14 +2011,15 @@ begin
     PMdxHdr(Header)^.Month := month;
     PMdxHdr(Header)^.Day := day;
     WriteDBFileName(PMdxHdr(Header), FileName);
-    PMdxHdr(Header)^.BlockSize := SwapWordLE(2);
-    PMdxHdr(Header)^.BlockAdder := SwapWordLE(1024);
+    PMdxHdr(Header)^.BlockSize := 2;
+    PMdxHdr(Header)^.BlockAdder := 1024;
     PMdxHdr(Header)^.ProdFlag := 1;
     PMdxHdr(Header)^.NumTags := 48;
     PMdxHdr(Header)^.TagSize := 32;
+//    PMdxHdr(Header)^.TagsUsed := 0;
     PMdxHdr(Header)^.Dummy2 := 0;
     PMdxHdr(Header)^.Language := GetDbfLanguageID;
-    PMdxHdr(Header)^.NumPages := SwapIntLE(HeaderSize div PageSize);  // = 4
+    PMdxHdr(Header)^.NumPages := HeaderSize div PageSize;    // = 4
     TouchHeader(Header);
     PMdxHdr(Header)^.TagFlag := 1;
     // use locale id of parent
@@ -2081,12 +2030,11 @@ begin
       FCollation := GetCollationTable(DbfLangId);
     // write index headers
     prevSelIndex := FSelectedIndex;
-    for pos := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed) - 1 do
+    for pos := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
       SelectIndexVars(pos);
-      pageno := GetNewPageNo;
-      FMdxTag.HeaderPageNo := SwapIntLE(pageno);
-      WriteRecord(pageno, FIndexHeader);
+      FMdxTag.HeaderPageNo := GetNewPageNo;
+      WriteRecord(FMdxTag.HeaderPageNo, FIndexHeader);
     end;
     // reselect previously selected index
     SelectIndexVars(prevSelIndex);
@@ -2098,11 +2046,11 @@ begin
     FTagSize := 32;
     FTagOffset := 544;
     // clear entries
-    RecordCount := SwapIntLE(PMdxHdr(Header)^.NumPages);
+    RecordCount := PMdxHdr(Header)^.NumPages;
   end else begin
     // clear single index entry
     ClearIndex;
-    RecordCount := SwapIntLE(PIndexHdr(FIndexHeader)^.NumPages);
+    RecordCount := PIndexHdr(FIndexHeader)^.NumPages;
   end;
 end;
 
@@ -2122,15 +2070,15 @@ begin
     FHeaderLocked := 0;
   end;
   // initially, we have 1 page: header
-  PIndexHdr(FIndexHeader)^.NumPages := SwapIntLE(HeaderSize div PageSize);
+  PIndexHdr(FIndexHeader)^.NumPages := HeaderSize div PageSize;
   // clear memory of root
   FRoot.Clear;
   // get new page for root
   FRoot.GetNewPage;
   // store new root page
-  PIndexHdr(FIndexHeader)^.RootPage := SwapIntLE(FRoot.PageNo);
+  PIndexHdr(FIndexHeader)^.RootPage := FRoot.PageNo;
 {$ifdef TDBF_UPDATE_FIRSTLAST_NODE}
-  PIndexHdr(FIndexHeader)^.FirstNode := SwapIntLE(FRoot.PageNo);
+  PIndexHdr(FIndexHeader)^.FirstNode := FRoot.PageNo;
 {$endif}
   // update leaf pointers
   FLeaves[FSelectedIndex] := FRoot;
@@ -2149,12 +2097,15 @@ end;
 
 procedure TIndexFile.CalcKeyProperties;
   // given KeyLen, this func calcs KeyRecLen and NumEntries
+var
+  remainder: Integer;
 begin
   // now adjust keylen to align on DWORD boundaries
-  PIndexHdr(FIndexHeader)^.KeyRecLen := SwapWordLE((SwapWordLE(
-    PIndexHdr(FIndexHeader)^.KeyLen) + FEntryHeaderSize + 3) and not 3);
-  PIndexHdr(FIndexHeader)^.NumKeys := SwapWordLE((RecordSize - FPageHeaderSize) div 
-    SwapWordLE(PIndexHdr(FIndexHeader)^.KeyRecLen));
+  PIndexHdr(FIndexHeader)^.KeyRecLen := PIndexHdr(FIndexHeader)^.KeyLen + FEntryHeaderSize;
+  remainder := (PIndexHdr(FIndexHeader)^.KeyRecLen) mod 4;
+  if (remainder > 0) then
+    PIndexHdr(FIndexHeader)^.KeyRecLen := PIndexHdr(FIndexHeader)^.KeyRecLen + 4 - remainder;
+  PIndexHdr(FIndexHeader)^.NumKeys := (RecordSize - FPageHeaderSize) div PIndexHdr(FIndexHeader)^.KeyRecLen;
 end;
 
 function TIndexFile.GetName: string;
@@ -2169,7 +2120,7 @@ end;
 procedure TIndexFile.CreateIndex(FieldDesc, TagName: string; Options: TIndexOptions);
 var
   tagNo: Integer;
-  fieldType: Char;
+  fieldType: AnsiChar;
   TempParser: TDbfIndexParser;
 begin
   // check if we have exclusive access to table
@@ -2177,7 +2128,7 @@ begin
   // parse index expression; if it cannot be parsed, why bother making index?
   TempParser := TDbfIndexParser.Create(FDbfFile);
   try
-    TempParser.ParseExpression(FieldDesc);
+    TempParser.ParseExpression(String(FieldDesc));
     // check if result type is correct
     fieldType := 'C';
     case TempParser.ResultType of
@@ -2193,7 +2144,7 @@ begin
   if FIndexVersion >= xBaseIV then
   begin
     // get next entry no
-    tagNo := SwapWordLE(PMdxHdr(Header)^.TagsUsed);
+    tagNo := PMdxHdr(Header)^.TagsUsed;
     // check if too many indexes
     if tagNo = MaxIndexes then
       raise EDbfError.Create(STRING_TOO_MANY_INDEXES);
@@ -2215,7 +2166,7 @@ begin
     FLeaf := FLeaves[tagNo];
     // create new tag
     FTempMdxTag.Tag := CalcTagOffset(tagNo);
-    FTempMdxTag.TagName := UpperCase(TagName);
+    FTempMdxTag.TagName := AnsiUpperCase(TagName);
     // if expression then calculate
     FTempMdxTag.KeyFormat := KeyFormat_Data;
     if ixExpression in Options then
@@ -2231,12 +2182,12 @@ begin
     WriteFileHeader;
     // store selected index
     FSelectedIndex := tagNo;
-    FIndexName := TagName;
+    FIndexName := String(TagName);
     // store new headerno
     FHeaderPageNo := GetNewPageNo;
     FTempMdxTag.HeaderPageNo := FHeaderPageNo;
     // increase number of indexes active
-    IncWordLE(PMdxHdr(Header)^.TagsUsed, 1);
+    inc(PMdxHdr(Header)^.TagsUsed);
     // update updatemode
     UpdateMode := umAll;
     // index header updated
@@ -2246,7 +2197,7 @@ begin
   ClearIndex;
 
   // parse expression, we know it's parseable, we've checked that
-  FCurrentParser.ParseExpression(FieldDesc);
+  FCurrentParser.ParseExpression(String(FieldDesc));
 
   // looked up index expression: now we can edit
 //  FIsExpression := ixExpression in Options;
@@ -2274,36 +2225,36 @@ begin
   end;
   // keylen is exact length of field
   if fieldType = 'C' then
-    PIndexHdr(FIndexHeader)^.KeyLen := SwapWordLE(FCurrentParser.ResultLen)
+    PIndexHdr(FIndexHeader)^.KeyLen := FCurrentParser.ResultLen
   else if FIndexVersion >= xBaseIV then
-    PIndexHdr(FIndexHeader)^.KeyLen := SwapWordLE(12)
+    PIndexHdr(FIndexHeader)^.KeyLen := 12
   else
-    PIndexHdr(FIndexHeader)^.KeyLen := SwapWordLE(8);
+    PIndexHdr(FIndexHeader)^.KeyLen := 8;
   CalcKeyProperties;
   // key desc
-  StrPLCopy(PIndexHdr(FIndexHeader)^.KeyDesc, FieldDesc, 219);
+  StrPLCopy(PChar(String(PIndexHdr(FIndexHeader)^.KeyDesc)), FieldDesc, 219);
   PIndexHdr(FIndexHeader)^.KeyDesc[219] := #0;
 
   // init various
   if FIndexVersion >= xBaseIV then
     PIndexHdr(FIndexHeader)^.Dummy := 0        // MDX -> language driver
   else
-    PIndexHdr(FIndexHeader)^.Dummy := SwapWordLE($5800);   // NDX -> same ???
+    PIndexHdr(FIndexHeader)^.Dummy := $5800;   // NDX -> same ???
   case fieldType of
     'C':
       PIndexHdr(FIndexHeader)^.sKeyType := 0;
     'D':
-      PIndexHdr(FIndexHeader)^.sKeyType := SwapWordLE(1);
+      PIndexHdr(FIndexHeader)^.sKeyType := 1;
     'N', 'F':
       if FIndexVersion >= xBaseIV then
         PIndexHdr(FIndexHeader)^.sKeyType := 0
       else
-        PIndexHdr(FIndexHeader)^.sKeyType := SwapWordLE(1);
+        PIndexHdr(FIndexHeader)^.sKeyType := 1;
   else
     PIndexHdr(FIndexHeader)^.sKeyType := 0;
   end;
 
-  PIndexHdr(FIndexHeader)^.Version := SwapWordLE(2);     // this is what DB4 writes into file
+  PIndexHdr(FIndexHeader)^.Version := 2;     // this is what DB4 writes into file
   PIndexHdr(FIndexHeader)^.Dummy2 := 0;
   PIndexHdr(FIndexHeader)^.Dummy3 := 0;
   PIndexHdr(FIndexHeader)^.ForExist := 0;    // false
@@ -2319,7 +2270,7 @@ begin
   UpdateIndexProperties;
 
   // for searches / inserts / deletes
-  FKeyBuffer[SwapWordLE(PIndexHdr(FIndexHeader)^.KeyLen)] := #0;
+  FKeyBuffer[PIndexHdr(FIndexHeader)^.KeyLen] := #0;
 end;
 
 procedure TIndexFile.ReadIndexes;
@@ -2328,14 +2279,13 @@ var
 
   procedure CheckHeaderIntegrity;
   begin
-    if integer(SwapWordLE(PIndexHdr(FIndexHeader)^.NumKeys) * 
-        SwapWordLE(PIndexHdr(FIndexHeader)^.KeyRecLen)) > RecordSize then
+    if integer(PIndexHdr(FIndexHeader)^.NumKeys * PIndexHdr(FIndexHeader)^.KeyRecLen) > RecordSize then
     begin
       // adjust index header so that integrity is correct
       // WARNING: we can't be sure this gives a correct result, but at
       // least we won't AV (as easily). user will probably have to regenerate this index
-      if SwapWordLE(PIndexHdr(FIndexHeader)^.KeyLen) > 100 then
-        PIndexHdr(FIndexHeader)^.KeyLen := SwapWordLE(100);
+      if PIndexHdr(FIndexHeader)^.KeyLen > 100 then
+        PIndexHdr(FIndexHeader)^.KeyLen := 100;
       CalcKeyProperties;
     end;
   end;
@@ -2348,10 +2298,10 @@ begin
   begin
     // clear all roots
     ClearRoots;
-    // tags are extended at beginning? tagsize is byte sized
+    // tags are extended at beginning?
     FTagSize := PMdxHdr(Header)^.TagSize;
     FTagOffset := 544 + FTagSize - 32;
-    for I := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed) - 1 do
+    for I := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
       // read page header
       FTempMdxTag.Tag := CalcTagOffset(I);
@@ -2367,7 +2317,7 @@ begin
       // check header integrity
       CheckHeaderIntegrity;
       // read tree
-      FRoots[I].PageNo := SwapIntLE(PIndexHdr(FIndexHeader)^.RootPage);
+      FRoots[I].PageNo := PIndexHdr(FIndexHeader)^.RootPage;
       // go to first record
       FRoots[I].RecurFirst;
       // store leaf
@@ -2375,7 +2325,7 @@ begin
       while FLeaves[I].LowerPage <> nil do
         FLeaves[I] := FLeaves[I].LowerPage;
       // parse expression
-      FParsers[I].ParseExpression(PIndexHdr(FIndexHeader)^.KeyDesc);
+      FParsers[I].ParseExpression(String(PIndexHdr(FIndexHeader)^.KeyDesc));
     end;
   end else begin
     // clear root
@@ -2383,7 +2333,7 @@ begin
     // check recordsize constraint
     CheckHeaderIntegrity;
     // just one index: read tree
-    FRoot.PageNo := SwapIntLE(PIndexHdr(FIndexHeader)^.RootPage);
+    FRoot.PageNo := PIndexHdr(FIndexHeader)^.RootPage;
     // go to first valid record
     FRoot.RecurFirst;
     // get leaf page
@@ -2417,7 +2367,7 @@ begin
     if found >= 0 then
     begin
       // just remove this tag by copying memory over it
-      numTags := SwapWordLE(PMdxHdr(Header)^.TagsUsed);
+      numTags := PMdxHdr(Header)^.TagsUsed;
       moveItems := numTags - found - 1;
       // anything to move?
       if moveItems > 0 then
@@ -2447,7 +2397,7 @@ begin
         FIndexHeaderModified[found + moveItems] := false;    // non-existant header
       end;
       // one entry less left
-      IncWordLE(PMdxHdr(Header)^.TagsUsed, -1);
+      dec(PMdxHdr(Header)^.TagsUsed);
       // ---*** numTags not valid from here ***---
       // file header changed
       WriteFileHeader;
@@ -2497,8 +2447,8 @@ var
     Result := newPageNo;
     Inc(newPageNo, PagesPerRecord);
     if FIndexVersion >= xBaseIV then
-      IncIntLE(PMdxHdr(TempFile.Header)^.NumPages, PagesPerRecord);
-    IncIntLE(TempIdxHeader^.NumPages, PagesPerRecord);
+      Inc(PMdxHdr(TempFile.Header)^.NumPages, PagesPerRecord);
+    Inc(TempIdxHeader^.NumPages, PagesPerRecord);
   end;
 
   function WriteTree(NewPage: TIndexPage): Integer;
@@ -2522,16 +2472,16 @@ var
     begin
       if FIndexVersion >= xBaseIV then
       begin
-        PMdxEntry(NewPage.UpperPage.Entry)^.RecBlockNo := SwapIntLE(Result);
+        PMdxEntry(NewPage.UpperPage.Entry)^.RecBlockNo := Result;
 {$ifdef TDBF_UPDATE_FIRSTLAST_NODE}
         // write previous node
         if FRoot = NewPage then
           PMdxPage(NewPage.PageBuffer)^.PrevBlock := 0
         else
-          PMdxPage(NewPage.PageBuffer)^.PrevBlock := SwapIntLE(Result - PagesPerRecord);
+          PMdxPage(NewPage.PageBuffer)^.PrevBlock := Result - PagesPerRecord;
 {$endif}
       end else begin
-        PNdxEntry(NewPage.UpperPage.Entry)^.LowerPageNo := SwapIntLE(Result);
+        PNdxEntry(NewPage.UpperPage.Entry)^.LowerPageNo := Result;
       end;
     end;
     // store page
@@ -2549,7 +2499,7 @@ var
     // allocate a page no for header
     hdrPageNo := AllocNewPageNo;
     // use recursive function to write all pages
-    TempIdxHeader^.RootPage := SwapIntLE(WriteTree(FRoot));
+    TempIdxHeader^.RootPage := WriteTree(FRoot);
 {$ifdef TDBF_UPDATE_FIRSTLAST_NODE}
     TempIdxHeader^.FirstNode := TempIdxHeader^.RootPage;
 {$endif}
@@ -2558,7 +2508,7 @@ var
     if FIndexVersion >= xBaseIV then
     begin
       // calculate tag offset in tempfile header
-      FTempMdxTag.Tag := PChar(TempFile.Header) + (PChar(CalcTagOffset(I)) - Header);
+      FTempMdxTag.Tag := PAnsiChar(TempFile.Header) + (PChar(CalcTagOffset(I)) - Header);
       FTempMdxTag.HeaderPageNo := hdrPageNo;
     end;
   end;
@@ -2575,11 +2525,11 @@ begin
     Move(Header^, TempFile.Header^, HeaderSize);
     TouchHeader(TempFile.Header);
     // reset header
-    PMdxHdr(TempFile.Header)^.NumPages := SwapIntLE(HeaderSize div PageSize);
+    PMdxHdr(TempFile.Header)^.NumPages := HeaderSize div PageSize;
     TempFile.WriteHeader;
     GetMem(TempIdxHeader, RecordSize);
     // now recreate indexes to that file
-    for I := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed - 1) do
+    for I := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
       // select this index
       SelectIndexVars(I);
@@ -2621,8 +2571,8 @@ var
     Result := newPageNo;
     Inc(newPageNo, PagesPerRecord);
     if FIndexVersion >= xBaseIV then
-      IncIntLE(PMdxHdr(TempFile.Header)^.NumPages, PagesPerRecord);
-    IncIntLE(TempIdxHeader^.NumPages, PagesPerRecord);
+      Inc(PMdxHdr(TempFile.Header)^.NumPages, PagesPerRecord);
+    Inc(TempIdxHeader^.NumPages, PagesPerRecord);
   end;
 
   function  CreateNewPage: TIndexPage;
@@ -2646,7 +2596,7 @@ var
     //  - do not set PageNo (= SetPageNo)
     //  - do not set EntryNo
   begin
-    if APage.HighIndex >= SwapWordLE(PIndexHdr(FIndexHeader)^.NumKeys)-1 then
+    if APage.HighIndex >= PIndexHdr(FIndexHeader)^.NumKeys-1 then
     begin
       if APage.UpperPage = nil then
       begin
@@ -2693,7 +2643,7 @@ var
     // copy current index settings
     Move(FIndexHeader^, TempIdxHeader^, RecordSize);
     // clear number of pages
-    TempIdxHeader^.NumPages := SwapIntLE(PagesPerRecord);
+    TempIdxHeader^.NumPages := PagesPerRecord;
     // allocate a page no for header
     hdrPageNo := AllocNewPageNo;
 
@@ -2716,16 +2666,16 @@ var
     until false;
 
     // copy index header + root page
-    TempIdxHeader^.RootPage := SwapIntLE(APage.PageNo);
+    TempIdxHeader^.RootPage := APage.PageNo;
 {$ifdef TDBF_UPDATE_FIRSTLAST_NODE}
-    TempIdxHeader^.FirstNode := SwapIntLE(APage.PageNo);
+    TempIdxHeader^.FirstNode := APage.PageNo;
 {$endif}
     // write index header now we know the root page
     TempFile.WriteRecord(hdrPageNo, TempIdxHeader);
     if FIndexVersion >= xBaseIV then
     begin
       // calculate tag offset in tempfile header
-      FTempMdxTag.Tag := PChar(TempFile.Header) + (PChar(CalcTagOffset(I)) - Header);
+      FTempMdxTag.Tag := PAnsiChar(TempFile.Header) + (PChar(CalcTagOffset(I)) - Header);
       FTempMdxTag.HeaderPageNo := hdrPageNo;
     end;
   end;
@@ -2742,11 +2692,11 @@ begin
     Move(Header^, TempFile.Header^, HeaderSize);
     TouchHeader(TempFile.Header);
     // reset header
-    PMdxHdr(TempFile.Header)^.NumPages := SwapIntLE(HeaderSize div PageSize);
+    PMdxHdr(TempFile.Header)^.NumPages := HeaderSize div PageSize;
     TempFile.WriteHeader;
     GetMem(TempIdxHeader, RecordSize);
     // now recreate indexes to that file
-    for I := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed) - 1 do
+    for I := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
       // select this index
       SelectIndexVars(I);
@@ -2801,26 +2751,26 @@ begin
   end;
   if FIndexVersion >= xBaseIV then
   begin
-    Result := SwapIntLE(PMdxHdr(Header)^.NumPages);
-    IncIntLE(PMdxHdr(Header)^.NumPages, PagesPerRecord);
+    Result := PMdxHdr(Header)^.NumPages;
+    PMdxHdr(Header)^.NumPages := PMdxHdr(Header)^.NumPages + PagesPerRecord;
 {$ifdef TDBF_UPDATE_FIRSTLAST_NODE}
     // adjust high page
-    PIndexHdr(FIndexHeader)^.LastNode := SwapIntLE(Result);
+    PIndexHdr(FIndexHeader)^.LastNode := Result;
 {$endif}
     WriteFileHeader;
   end else begin
-    Result := SwapIntLE(PIndexHdr(FIndexHeader)^.NumPages);
+    Result := PIndexHdr(FIndexHeader)^.NumPages;
   end;
-  IncIntLE(PIndexHdr(FIndexHeader)^.NumPages, PagesPerRecord);
+  PIndexHdr(FIndexHeader)^.NumPages := PIndexHdr(FIndexHeader)^.NumPages + PagesPerRecord;
   WriteHeader;
   // done updating header -> unlock if locked
   if needLockHeader then
     UnlockPage(0);
 end;
 
-function TIndexFile.Insert(RecNo: Integer; Buffer: PChar): Boolean; {override;}
+procedure TIndexFile.Insert(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF}); {override;}
 var
-  I, curSel, count: Integer;
+  I, curSel: Integer;
 begin
   // check if updating all or only current
   FUserRecNo := RecNo;
@@ -2828,35 +2778,22 @@ begin
   begin
     // remember currently selected index
     curSel := FSelectedIndex;
-    Result := true;
-    I := 0;
-    count := SwapWordLE(PMdxHdr(Header)^.TagsUsed);
-    while I < count do
+    for I := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
       SelectIndexVars(I);
-      Result := InsertKey(Buffer);
-      if not Result then
-      begin
-        while I > 0 do
-        begin
-          Dec(I);
-          DeleteKey(Buffer);
-        end;
-        break;
-      end;
-      Inc(I);
+      InsertKey(Buffer);
     end;
     // restore previous selected index
     SelectIndexVars(curSel);
   end else begin
-    Result := InsertKey(Buffer);
+    InsertKey(Buffer);
   end;
 
   // check range, disabled by insert
   ResyncRange(true);
 end;
 
-function TIndexFile.CheckKeyViolation(Buffer: PChar): Boolean;
+function TIndexFile.CheckKeyViolation(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF}): Boolean;
 var
   I, curSel: Integer;
 begin
@@ -2865,16 +2802,16 @@ begin
   if FIndexVersion = xBaseIV then
   begin
     curSel := FSelectedIndex;
-    for I := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed) - 1 do
+    I := 0;
+    while (I < PMdxHdr(Header)^.TagsUsed) and not Result do
     begin
       SelectIndexVars(I);
       if FUniqueMode = iuDistinct then
       begin
         FUserKey := ExtractKeyFromBuffer(Buffer);
         Result := FindKey(false) = 0;
-        if Result then
-          break;
       end;
+      Inc(I);
     end;
     SelectIndexVars(curSel);
   end else begin
@@ -2886,7 +2823,7 @@ begin
   end;
 end;
 
-function TIndexFile.PrepareKey(Buffer: PChar; ResultType: TExpressionType): PChar;
+function TIndexFile.PrepareKey(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF}; ResultType: TExpressionType): {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF};
 var
   FloatRec: TFloatRec;
   I, IntSrc, NumDecimals: Integer;
@@ -2899,7 +2836,7 @@ var
 begin
   // need to convert numeric?
   Result := Buffer;
-  if PIndexHdr(FIndexHeader)^.KeyType in ['N', 'F'] then
+  if {$IFDEF DELPHI_2009}CharInSet{$ENDIF}(PIndexHdr(FIndexHeader)^.KeyType {$IFDEF DELPHI_2009},{$ELSE} in {$ENDIF}['F', 'N']) then
   begin
     if FIndexVersion = xBaseIII then
     begin
@@ -2908,13 +2845,13 @@ begin
         etInteger:
           begin
             FUserNumeric := PInteger(Result)^;
-            Result := PChar(@FUserNumeric);
+            Result := @FUserNumeric;
           end;
 {$ifdef SUPPORT_INT64}
         etLargeInt:
           begin
             FUserNumeric := PLargeInt(Result)^;
-            Result := PChar(@FUserNumeric);
+            Result := @FUserNumeric;
           end;
 {$endif}
       end;
@@ -2948,7 +2885,7 @@ begin
             ExtValue := PDouble(Result)^;
             FloatToDecimal(FloatRec, ExtValue, {$ifndef FPC_VERSION}fvExtended,{$endif} 9999, 15);
             if ExtValue <> 0.0 then
-              NumDecimals := StrLen(@FloatRec.Digits[0])
+              NumDecimals := {$IFDEF DELPHI_XE4}AnsiStrings.StrLen(PAnsiChar(@FloatRec.Digits[0])){$ELSE}StrLen(PAnsiChar(@FloatRec.Digits[0])){$ENDIF}
             else
               NumDecimals := 0;
             // maximum number of decimals possible to encode in BCD is 16
@@ -2962,10 +2899,18 @@ begin
           begin
             FloatRec.Exponent := NumDecimals;
             // MDX-BCD does not count ending zeroes as `data' space length
+            {$IFDEF DELPHI_XE3}
+            while (NumDecimals > 0) and (Char(FloatRec.Digits[NumDecimals-1]) = '0') do
+            {$ELSE}
             while (NumDecimals > 0) and (FloatRec.Digits[NumDecimals-1] = '0') do
+            {$ENDIF}
               Dec(NumDecimals);
             // null-terminate string
+            {$IFDEF DELPHI_XE3}
+            FloatRec.Digits[NumDecimals] := Byte(#0);
+            {$ELSE}
             FloatRec.Digits[NumDecimals] := #0;
+            {$ENDIF}
           end;
       end;
 
@@ -2984,7 +2929,11 @@ begin
       while I < NumDecimals do
       begin
         // only one byte left?
+        {$IFDEF DELPHI_XE3}
+        if FloatRec.Digits[I+1] = Byte(#0) then
+        {$ELSE}
         if FloatRec.Digits[I+1] = #0 then
+        {$ENDIF}
           BCDdigit := 0
         else
           BCDdigit := Byte(FloatRec.Digits[I+1]) - Byte('0');
@@ -2995,24 +2944,24 @@ begin
       end;
 
       // set result pointer to BCD
-      Result := PChar(@FUserBCD[0]);
+      Result := @FUserBCD[0];
     end;
   end;
 end;
 
-function TIndexFile.ExtractKeyFromBuffer(Buffer: PChar): PChar;
+function TIndexFile.ExtractKeyFromBuffer(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF}): PAnsiChar;
 begin
   // execute expression to get key
-  Result := PrepareKey(FCurrentParser.ExtractFromBuffer(Buffer), FCurrentParser.ResultType);
-  if FCurrentParser.StringFieldMode <> smRaw then
+  Result := PAnsiChar(PrepareKey(PByte(FCurrentParser.ExtractFromBuffer(PAnsiChar(Buffer))), FCurrentParser.ResultType));
+  if not FCurrentParser.RawStringFields then
     TranslateString(GetACP, FCodePage, Result, Result, KeyLen);
 end;
 
-function TIndexFile.InsertKey(Buffer: PChar): boolean;
+procedure TIndexFile.InsertKey(Buffer: {$IFDEF DELPHI_2009}PByte{$ELSE}PAnsiChar{$ENDIF});
 begin
-  Result := true;
   // ignore deleted records
-  if (FModifyMode = mmNormal) and (FUniqueMode = iuDistinct) and (Buffer^ = '*') then
+  if (FModifyMode = mmNormal) and (FUniqueMode = iuDistinct) and
+     ({$IFDEF DELPHI_2009}Buffer[0] = Ord('*'){$ELSE}Buffer^ = '*'{$ENDIF}) then
     exit;
   // check proper index and modifiability
   if FCanEdit and (PIndexHdr(FIndexHeader)^.KeyLen <> 0) then
@@ -3020,17 +2969,16 @@ begin
     // get key from buffer
     FUserKey := ExtractKeyFromBuffer(Buffer);
     // patch through
-    Result := InsertCurrent;
+    InsertCurrent;
   end;
 end;
 
-function TIndexFile.InsertCurrent: boolean;
+procedure TIndexFile.InsertCurrent;
   // insert in current index
   // assumes: FUserKey is an OEM key
 begin
   // only insert if not recalling or mode = distinct
   // modify = mmDeleteRecall /\ unique <> distinct -> key already present
-  Result := true;
   if (FModifyMode <> mmDeleteRecall) or (FUniqueMode = iuDistinct) then
   begin
     // temporarily remove range to find correct location of key
@@ -3050,34 +2998,23 @@ begin
       begin
         // raising -> reset modify mode
         FModifyMode := mmNormal;
-        ConstructInsertErrorMsg;
-        Result := false;
+        InsertError;
       end;
     end;
   end;
 end;
 
-procedure TIndexFile.ConstructInsertErrorMsg;
+procedure TIndexFile.InsertError;
 var
   InfoKey: string;
 begin
-  if Length(FLastError) > 0 then exit;
-  InfoKey := FUserKey;
+  // prepare info for user
+  InfoKey := String(FUserKey);
   SetLength(InfoKey, KeyLen);
-  FLastError := Format(STRING_KEY_VIOLATION, [GetName,
-    PhysicalRecNo, TrimRight(InfoKey)]);
+  raise EDbfError.CreateFmt(STRING_KEY_VIOLATION, [GetName, PhysicalRecNo, TrimRight(InfoKey)]);
 end;
 
-procedure TIndexFile.InsertError;
-var
-  errorStr: string;
-begin
-  errorStr := FLastError;
-  FLastError := '';
-  raise EDbfError.Create(errorStr);
-end;
-
-procedure TIndexFile.Delete(RecNo: Integer; Buffer: PChar);
+procedure TIndexFile.Delete(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
 var
   I, curSel: Integer;
 begin
@@ -3087,7 +3024,7 @@ begin
   begin
     // remember currently selected index
     curSel := FSelectedIndex;
-    for I := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed) - 1 do
+    for I := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
       SelectIndexVars(I);
       DeleteKey(Buffer);
@@ -3101,7 +3038,7 @@ begin
   ResyncRange(true);
 end;
 
-procedure TIndexFile.DeleteKey(Buffer: PChar);
+procedure TIndexFile.DeleteKey(Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
 begin
   if FCanEdit and (PIndexHdr(FIndexHeader)^.KeyLen <> 0) then
   begin
@@ -3131,15 +3068,9 @@ begin
   end;
 end;
 
-function TIndexFile.UpdateIndex(Index: Integer; PrevBuffer, NewBuffer: PChar): Boolean;
-begin
-  SelectIndexVars(Index);
-  Result := UpdateCurrent(PrevBuffer, NewBuffer);
-end;
-
-function TIndexFile.Update(RecNo: Integer; PrevBuffer, NewBuffer: PChar): Boolean;
+procedure TIndexFile.Update(RecNo: Integer; PrevBuffer, NewBuffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
 var
-  I, curSel, count: Integer;
+  I, curSel: Integer;
 begin
   // check if updating all or only current
   FUserRecNo := RecNo;
@@ -3147,60 +3078,42 @@ begin
   begin
     // remember currently selected index
     curSel := FSelectedIndex;
-    Result := true;
-    I := 0;
-    count := SwapWordLE(PMdxHdr(Header)^.TagsUsed);
-    while I < count do
+    for I := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
-      Result := UpdateIndex(I, PrevBuffer, NewBuffer);
-      if not Result then
-      begin
-        // rollback updates to previous indexes
-        while I > 0 do
-        begin
-          Dec(I);
-          UpdateIndex(I, NewBuffer, PrevBuffer);
-        end;
-        break;
-      end;
-      Inc(I);
+      SelectIndexVars(I);
+      UpdateCurrent(PrevBuffer, NewBuffer);
     end;
     // restore previous selected index
     SelectIndexVars(curSel);
   end else begin
-    Result := UpdateCurrent(PrevBuffer, NewBuffer);
+    UpdateCurrent(PrevBuffer, NewBuffer);
   end;
   // check range, disabled by delete/insert
   if (FRoot.LowPage = 0) and (FRoot.HighPage = 0) then
     ResyncRange(true);
 end;
 
-function TIndexFile.UpdateCurrent(PrevBuffer, NewBuffer: PChar): boolean;
+procedure TIndexFile.UpdateCurrent(PrevBuffer, NewBuffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
 var
-  InsertKey, DeleteKey: PChar;
-  TempBuffer: array [0..100] of Char;
+  TempBuffer: array [0..100] of AnsiChar;
 begin
-  Result := true;
   if FCanEdit and (PIndexHdr(FIndexHeader)^.KeyLen <> 0) then
   begin
-    DeleteKey := ExtractKeyFromBuffer(PrevBuffer);
-    Move(DeleteKey^, TempBuffer, SwapWordLE(PIndexHdr(FIndexHeader)^.KeyLen));
-    DeleteKey := @TempBuffer[0];
-    InsertKey := ExtractKeyFromBuffer(NewBuffer);
+    // get key from newbuffer
+    FUserKey := ExtractKeyFromBuffer(NewBuffer);
+    Move(FUserKey^, TempBuffer, PIndexHdr(FIndexHeader)^.KeyLen);
+    // get key from prevbuffer
+    FUserKey := ExtractKeyFromBuffer(PrevBuffer);
 
     // compare to see if anything changed
-    if CompareKeys(DeleteKey, InsertKey) <> 0 then
+    if CompareKey(@TempBuffer[0]) <> 0 then
     begin
-      FUserKey := DeleteKey;
+      // first set userkey to key to delete
+      // FUserKey = KeyFrom(PrevBuffer)
       DeleteCurrent;
-      FUserKey := InsertKey;
-      Result := InsertCurrent;
-      if not Result then
-      begin
-        FUserKey := DeleteKey;
-        InsertCurrent;
-        FUserKey := InsertKey;
-      end;
+      // now set userkey to key to insert
+      FUserKey := @TempBuffer[0];
+      InsertCurrent;
     end;
   end;
 end;
@@ -3208,7 +3121,7 @@ end;
 procedure TIndexFile.AddNewLevel;
 var
   lNewPage: TIndexPage;
-  pKeyData: PChar;
+  pKeyData: PAnsiChar;
 begin
   // create new page + space
   if FIndexVersion >= xBaseIV then
@@ -3224,7 +3137,7 @@ begin
   FHeaderLocked := FHeaderPageNo;
 
   // modify header
-  PIndexHdr(FIndexHeader)^.RootPage := SwapIntLE(lNewPage.PageNo);
+  PIndexHdr(FIndexHeader)^.RootPage := lNewPage.PageNo;
 
   // set new page properties
   lNewPage.SetNumEntries(0);
@@ -3265,10 +3178,10 @@ begin
   end else
     inherited ReadHeader;
   // reread tree
-  FRoot.PageNo := SwapIntLE(PIndexHdr(FIndexHeader)^.RootPage);
+  FRoot.PageNo := PIndexHdr(FIndexHeader)^.RootPage;
 end;
 
-function TIndexFile.SearchKey(Key: PChar; SearchType: TSearchKeyType): Boolean;
+function TIndexFile.SearchKey(Key: PAnsiChar; SearchType: TSearchKeyType): Boolean;
 var
   findres, currRecNo: Integer;
 begin
@@ -3303,7 +3216,7 @@ begin
     SequentialRecNo := currRecNo;
 end;
 
-function TIndexFile.Find(RecNo: Integer; Buffer: PChar): Integer;
+function TIndexFile.Find(RecNo: Integer; Buffer: PAnsiChar): Integer;
 begin
   // execute find
   FUserRecNo := RecNo;
@@ -3385,7 +3298,7 @@ begin
       // check if this page is full, then split it
       numEntries := TempPage.NumEntries;
       // if this is inner node, we can only store one less than max entries
-      numKeysAvail := SwapWordLE(PIndexHdr(FIndexHeader)^.NumKeys) - numEntries;
+      numKeysAvail := PIndexHdr(FIndexHeader)^.NumKeys - numEntries;
       if TempPage.LowerPage <> nil then
         dec(numKeysAvail);
       // too few available -> split
@@ -3399,7 +3312,7 @@ begin
   until done = 0;
 end;
 
-function TIndexFile.MatchKey(UserKey: PChar): Integer;
+function TIndexFile.MatchKey(UserKey: PAnsiChar): Integer;
 begin
   // BOF and EOF always false
   if FLeaf.Entry = FEntryBof then
@@ -3413,7 +3326,7 @@ begin
   end;
 end;
 
-procedure TIndexFile.SetRange(LowRange, HighRange: PChar);
+procedure TIndexFile.SetRange(LowRange, HighRange: PAnsiChar);
 begin
   Move(LowRange^, FLowBuffer[0], KeyLen);
   Move(HighRange^, FHighBuffer[0], KeyLen);
@@ -3421,7 +3334,7 @@ begin
   ResyncRange(true);
 end;
 
-procedure TIndexFile.RecordDeleted(RecNo: Integer; Buffer: PChar);
+procedure TIndexFile.RecordDeleted(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
 begin
   // are we distinct -> then delete record from index
   FModifyMode := mmDeleteRecall;
@@ -3429,11 +3342,11 @@ begin
   FModifyMode := mmNormal;
 end;
 
-function TIndexFile.RecordRecalled(RecNo: Integer; Buffer: PChar): Boolean;
+procedure TIndexFile.RecordRecalled(RecNo: Integer; Buffer: {$IFDEF DELPHI_2009}TRecordBuffer{$ELSE}PAnsiChar{$ENDIF});
 begin
   // are we distinct -> then reinsert record in index
   FModifyMode := mmDeleteRecall;
-  Result := Insert(RecNo, Buffer);
+  Insert(RecNo, Buffer);
   FModifyMode := mmNormal;
 end;
 
@@ -3459,7 +3372,7 @@ end;
 procedure TIndexFile.SetUpdateMode(NewMode: TIndexUpdateMode);
 begin
   // if there is only one index, don't waste time and just set single
-  if (FIndexVersion = xBaseIII) or (SwapWordLE(PMdxHdr(Header)^.TagsUsed) <= 1) then
+  if (FIndexVersion = xBaseIII) or (PMdxHdr(Header)^.TagsUsed <= 1) then
     FUpdateMode := umCurrent
   else
     FUpdateMode := NewMode;
@@ -3572,7 +3485,7 @@ begin
     action := 1;
   end else begin
     // read current key into buffer
-    Move(FLeaf.Key^, FKeyBuffer, SwapWordLE(PIndexHdr(FIndexHeader)^.KeyLen));
+    Move(FLeaf.Key^, FKeyBuffer, PIndexHdr(FIndexHeader)^.KeyLen);
     recno := FLeaf.PhysicalRecNo;
     action := 2;
   end;
@@ -3638,10 +3551,10 @@ end;
 
 function TIndexFile.GetKeyLen: Integer;
 begin
-  Result := SwapWordLE(PIndexHdr(FIndexHeader)^.KeyLen);
+  Result := PIndexHdr(FIndexHeader)^.KeyLen;
 end;
 
-function TIndexFile.GetKeyType: Char;
+function TIndexFile.GetKeyType: AnsiChar;
 begin
   Result := PIndexHdr(FIndexHeader)^.KeyType;
 end;
@@ -3760,30 +3673,6 @@ begin
   until TempPage = nil;
 end;
 
-procedure TIndexFile.DisableRange;
-var
-  TempPage: TIndexPage;
-begin
-  TempPage := FRoot;
-  repeat
-    TempPage.SaveBracket;
-    TempPage := TempPage.LowerPage;
-  until TempPage = nil;
-  CancelRange;
-end;
-
-procedure TIndexFile.EnableRange;
-var
-  TempPage: TIndexPage;
-begin
-  TempPage := FRoot;
-  repeat
-    TempPage.RestoreBracket;
-    TempPage := TempPage.LowerPage;
-  until TempPage = nil;
-  FRangeActive := true;
-end;
-
 function MemComp(P1, P2: Pointer; const Length: Integer): Integer;
 var
   I: Integer;
@@ -3805,7 +3694,7 @@ begin
   Result := 0;
 end;
 
-function TIndexFile.CompareKeys(Key1, Key2: PChar): Integer;
+function TIndexFile.CompareKeys(Key1, Key2: PAnsiChar): Integer;
 begin
   // call compare routine
   Result := FCompareKeys(Key1, Key2);
@@ -3815,7 +3704,7 @@ begin
     Result := -Result;
 end;
 
-function TIndexFile.CompareKeysNumericNDX(Key1, Key2: PChar): Integer;
+function TIndexFile.CompareKeysNumericNDX(Key1, Key2: PAnsiChar): Integer;
 var
   v1,v2: Double;
 begin
@@ -3826,7 +3715,7 @@ begin
   else Result := 0;
 end;
 
-function TIndexFile.CompareKeysNumericMDX(Key1, Key2: PChar): Integer;
+function TIndexFile.CompareKeysNumericMDX(Key1, Key2: PAnsiChar): Integer;
 var
   neg1, neg2: Boolean;
 begin
@@ -3860,14 +3749,14 @@ begin
     Result := 1;
 end;
 
-function TIndexFile.CompareKeysString(Key1, Key2: PChar): Integer;
+function TIndexFile.CompareKeysString(Key1, Key2: PAnsiChar): Integer;
 begin
   Result := DbfCompareString(FCollation, Key1, KeyLen, Key2, KeyLen);
   if Result > 0 then
     Dec(Result, 2);
 end;
 
-function TIndexFile.CompareKey(Key: PChar): Integer;
+function TIndexFile.CompareKey(Key: PAnsiChar): Integer;
 begin
   Result := CompareKeys(FUserKey, Key);
 end;
@@ -3879,14 +3768,13 @@ var
 begin
   // get index of this index :-)
   Result := -1;
-  for I := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed) - 1 do
+  I := 0;
+  while (I < PMdxHdr(Header)^.TagsUsed) and (Result < 0) do
   begin
     FTempMdxTag.Tag := CalcTagOffset(I);
-    if AnsiCompareText(AIndexName, FTempMdxTag.TagName) = 0 then
-    begin
+    if AIndexName = FTempMdxTag.TagName then
       Result := I;
-      break;
-    end;
+    inc(I);
   end;
 end;
 
@@ -3901,27 +3789,14 @@ begin
     found := IndexOf(AIndexName);
   end else
     found := 0;
-  // if changing index, range is N/A anymore
-  if FRangeActive and (found <> FSelectedIndex) then
-  begin
-    FRangeIndex := FSelectedIndex;
-    DisableRange;
-  end;
   // we can now select by index
   if found >= 0 then
-  begin
     SelectIndexVars(found);
-    if found = FRangeIndex then
-    begin
-      EnableRange;
-      FRangeIndex := -1;
-    end;
-  end;
 end;
 
 function TIndexFile.CalcTagOffset(AIndex: Integer): Pointer;
 begin
-  Result := PChar(Header) + FTagOffset + AIndex * FTagSize;
+  Result := PAnsiChar(Header) + FTagOffset + AIndex * FTagSize;
 end;
 
 procedure TIndexFile.SelectIndexVars(AIndex: Integer);
@@ -4024,7 +3899,7 @@ begin
   // only applicable to MDX files
   if FIndexVersion >= xBaseIV then
   begin
-    for I := 0 to SwapWordLE(PMdxHdr(Header)^.TagsUsed) - 1 do
+    for I := 0 to PMdxHdr(Header)^.TagsUsed - 1 do
     begin
       FTempMdxTag.Tag := CalcTagOffset(I);
       AList.AddObject(FTempMdxTag.TagName, Self);
@@ -4042,7 +3917,7 @@ begin
   IndexName := AIndexName;
   // copy properties
   IndexDef.IndexFile := AIndexName;
-  IndexDef.Expression := PIndexHdr(FIndexHeader)^.KeyDesc;
+  IndexDef.Expression := String(PIndexHdr(FIndexHeader)^.KeyDesc);
   IndexDef.Options := [];
   IndexDef.Temporary := true;
   if FIsDescending then

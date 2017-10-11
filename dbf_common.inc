@@ -144,10 +144,213 @@
   {$define DELPHI_3}
 {$endif}
 
-{$ifdef VER185} // Delphi 2007
+{$ifdef VER190} // Delphi 2007
   {$define DELPHI_2007}
-  { Delphi 2007 also defines VER180, so other DELPHI defines already done }
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
 {$endif}
+
+{$ifdef VER200} // Delphi 2009
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER210} // Delphi 2010
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER220} // Delphi XE
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER230} // Delphi XE2
+  {$define DELPHI_XE2}
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER240} // Delphi XE3
+  {$define DELPHI_XE3}
+  {$define DELPHI_XE2}
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER250} // Delphi XE4
+  {$define DELPHI_XE4}
+  {$define DELPHI_XE3}
+  {$define DELPHI_XE2}
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER260} // Delphi XE5
+  {$define DELPHI_XE5}
+  {$define DELPHI_XE4}
+  {$define DELPHI_XE3}
+  {$define DELPHI_XE2}
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER270} // Delphi XE6
+  {$define DELPHI_XE6}
+  {$define DELPHI_XE5}
+  {$define DELPHI_XE4}
+  {$define DELPHI_XE3}
+  {$define DELPHI_XE2}
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER280} // Delphi XE7
+  {$define DELPHI_XE7}
+  {$define DELPHI_XE6}
+  {$define DELPHI_XE5}
+  {$define DELPHI_XE4}
+  {$define DELPHI_XE3}
+  {$define DELPHI_XE2}
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$ifdef VER290} // Delphi XE8
+  {$define DELPHI_XE8}
+  {$define DELPHI_XE7}
+  {$define DELPHI_XE6}
+  {$define DELPHI_XE5}
+  {$define DELPHI_XE4}
+  {$define DELPHI_XE3}
+  {$define DELPHI_XE2}
+  {$define DELPHI_XE}
+  {$define DELPHI_2010}
+  {$define DELPHI_2009}
+  {$define DELPHI_2007}
+  {$define DELPHI_2006}
+  {$define DELPHI_2005}
+  {$define DELPHI_8}
+  {$define DELPHI_7}
+  {$define DELPHI_6}
+  {$define DELPHI_5}
+  {$define DELPHI_4}
+  {$define DELPHI_3}
+{$endif}
+
+{$define DELPHI_XE10}
+{$define DELPHI_XE8}
+{$define DELPHI_XE7}
+{$define DELPHI_XE6}
+{$define DELPHI_XE5}
+{$define DELPHI_XE4}
+{$define DELPHI_XE3}
+{$define DELPHI_XE2}
+{$define DELPHI_XE}
+{$define DELPHI_2010}
+{$define DELPHI_2009}
+{$define DELPHI_2007}
+{$define DELPHI_2006}
+{$define DELPHI_2005}
+{$define DELPHI_8}
+{$define DELPHI_7}
+{$define DELPHI_6}
+{$define DELPHI_5}
+{$define DELPHI_4}
+{$define DELPHI_3}
 
 //-------------------------------------------------------
 //--- Conclude supported features from delphi version ---
@@ -157,13 +360,11 @@
 
   {$define SUPPORT_VARIANTS}
   {$define WINDOWS}
-  {$define ENDIAN_LITTLE}
 
 {$ifdef DELPHI_4}
 
   {$define SUPPORT_DEFCHANGED}
   {$define SUPPORT_DEFAULT_PARAMS}
-  {$define SUPPORT_OVERLOAD}
   {$define SUPPORT_NEW_TRANSLATE}
   {$define SUPPORT_INT64}
   {$define SUPPORT_REINTRODUCE}
@@ -179,7 +380,6 @@
 
   {$define SUPPORT_BACKWARD_FIELDDATA}
   {$define SUPPORT_INITDEFSFROMFIELDS}
-  {$define SUPPORT_REFRESHEVENTS}
   {$define SUPPORT_DEF_DELETE}
   {$define SUPPORT_FREEANDNIL}
 
@@ -206,13 +406,16 @@
   {$undef USE_ASSEMBLER_486_UP}
 {$endif}
 
+{$ifndef FPC_LITTLE_ENDIAN}
+  {$message error TDbf is not compatible with non little-endian CPUs. Please contact the author.}
+{$endif}
+
 {$ifdef USE_ASSEMBLER_486_UP}
   {$asmmode intel}
 {$endif}
 
   {$define SUPPORT_INT64}
   {$define SUPPORT_DEFAULT_PARAMS}
-  {$define SUPPORT_OVERLOAD}
   {$define SUPPORT_NEW_TRANSLATE}
   {$define SUPPORT_FIELDDEF_TPERSISTENT}
   {$define SUPPORT_FIELDTYPES_V4}
@@ -221,7 +424,6 @@
   {$define SUPPORT_MATH_UNIT}
   {$define SUPPORT_VARIANTS}
   {$define SUPPORT_SEPARATE_VARIANTS_UNIT}
-  {$define SUPPORT_REFRESHEVENTS}
 
   // FPC 2.0.x improvements
   {$ifdef VER2}
@@ -252,11 +454,5 @@
     {$define SUPPORT_INCLUDETRAILPATHDELIM}
     {$define SUPPORT_INCLUDETRAILBACKSLASH}
 
-{$endif}
-
-{$ifndef ENDIAN_LITTLE}
-{$ifndef ENDIAN_BIG}
-{$error Neither ENDIAN_LITTLE nor ENDIAN_BIG defined!}
-{$endif}
 {$endif}
 

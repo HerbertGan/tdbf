@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{2B78EAAB-09A4-48D5-BBE7-9523498D7A49}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="tdbf_xe4_d.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="tdbf_xe4_r.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="tdbf_xe4_d">
+        <MSBuild Projects="tdbf_xe4_d.dproj"/>
+    </Target>
+    <Target Name="tdbf_xe4_d:Clean">
+        <MSBuild Projects="tdbf_xe4_d.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="tdbf_xe4_d:Make">
+        <MSBuild Projects="tdbf_xe4_d.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="tdbf_xe4_r">
+        <MSBuild Projects="tdbf_xe4_r.dproj"/>
+    </Target>
+    <Target Name="tdbf_xe4_r:Clean">
+        <MSBuild Projects="tdbf_xe4_r.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="tdbf_xe4_r:Make">
+        <MSBuild Projects="tdbf_xe4_r.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="tdbf_xe4_d;tdbf_xe4_r"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="tdbf_xe4_d:Clean;tdbf_xe4_r:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="tdbf_xe4_d:Make;tdbf_xe4_r:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

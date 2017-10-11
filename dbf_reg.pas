@@ -41,9 +41,15 @@ uses
   QForms,
   QDialogs,
 {$else}
+{$ifdef DELPHI_XE2}
+  vcl.controls,
+  vcl.forms,
+  vcl.dialogs,
+{$else}
   Controls,
   Forms,
   Dialogs,
+{$endif}
 {$endif}
   dbf,
   dbf_dbffile,
@@ -52,7 +58,7 @@ uses
   dbf_common,
   dbf_str
 {$ifndef FPC}
-  ,ExptIntf
+//  ,ExptIntf
 {$endif}
 {$ifdef DELPHI_6}
   ,DesignIntf,DesignEditors
@@ -112,9 +118,10 @@ begin
     with fileopen do begin
       Dbf := GetComponent(0) as TDbf;
 {$ifndef FPC}
-      if Dbf.FilePath = EmptyStr then
+{      if Dbf.FilePath = EmptyStr then
         FileOpen.InitialDir := ExtractFilePath(ToolServices.GetProjectName)
       else
+}
 {$endif}
         FileOpen.InitialDir := Dbf.AbsolutePath;
       Filename := GetValue;
@@ -327,9 +334,10 @@ end;
 function IDE_DbfDefaultPath:string;
 begin
 {$ifndef FPC}
-  if ToolServices<>nil then
+{  if ToolServices<>nil then
     Result := ExtractFilePath(ToolServices.GetProjectName)
   else
+}
 {$endif}
     Result := GetCurrentDir
 end;

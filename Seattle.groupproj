@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{AA780A46-7475-48D9-9101-7C5F055799D9}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="tdbf_xe10_d.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="tdbf_xe10_r.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="tdbf_xe10_d">
+        <MSBuild Projects="tdbf_xe10_d.dproj"/>
+    </Target>
+    <Target Name="tdbf_xe10_d:Clean">
+        <MSBuild Projects="tdbf_xe10_d.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="tdbf_xe10_d:Make">
+        <MSBuild Projects="tdbf_xe10_d.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="tdbf_xe10_r">
+        <MSBuild Projects="tdbf_xe10_r.dproj"/>
+    </Target>
+    <Target Name="tdbf_xe10_r:Clean">
+        <MSBuild Projects="tdbf_xe10_r.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="tdbf_xe10_r:Make">
+        <MSBuild Projects="tdbf_xe10_r.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="tdbf_xe10_d;tdbf_xe10_r"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="tdbf_xe10_d:Clean;tdbf_xe10_r:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="tdbf_xe10_d:Make;tdbf_xe10_r:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
